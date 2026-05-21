@@ -51,7 +51,7 @@
 
     /* ── POST HEADER ─────────────────────────────────────────── */
 
-    .post-header { margin-bottom: 2rem; }
+    .post-header { margin-bottom: 1.5rem; }
 
     .post-header h1 {
       font-size: 1.75rem;
@@ -71,6 +71,14 @@
       font-style: italic;
       margin-top: 0.4rem;
       font-size: 1rem;
+    }
+
+    /* ── DIVIDER ─────────────────────────────────────────────── */
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--rule);
+      margin: 1.5rem 0;
     }
 
     /* ── POST CONTENT ────────────────────────────────────────── */
@@ -118,7 +126,10 @@
   <div class="post-header">
     <h1>My first thoughts... ever.</h1>
     <div class="post-date">05-21-2026</div>
+    <p class="post-description">Anyone ever tried this?</p>
   </div>
+
+  <hr>
 
   <div class="post-content">
     <p>This is just a quick test to see if everything formats right :)</p>
