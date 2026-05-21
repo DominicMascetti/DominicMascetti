@@ -171,7 +171,7 @@
     </div>
     <div class="friend">
       <a href="https://helenatran.com/" target="_blank">Helena</a>
-      <div class="bio">Motivational. Moving. Where would we be without her?.</div>
+      <div class="bio">Genuinely motivating. Where would we be without her?</div>
     </div>
     <div class="friend">
       
@@ -186,6 +186,10 @@
     document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     btn.classList.add('active');
+
+    if (window.location.hash === '#blog') {
+  show('blog', document.querySelector('nav button:nth-child(2)'));
+}
   }
 </script>
 </body>
