@@ -187,8 +187,10 @@
     document.getElementById(id).classList.add('active');
     btn.classList.add('active');
 
-    if (window.location.hash === '#blog') {
-  show('blog', document.querySelector('nav button:nth-child(2)'));
+    const hash = window.location.hash.slice(1);
+const tabBtn = document.querySelector(`nav button[onclick*="${hash}"]`);
+if (hash && document.getElementById(hash) && tabBtn) {
+  show(hash, tabBtn);
 }
   }
 </script>
