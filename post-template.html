@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Post Title — Dominic</title>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent:       #5c0000;
+      --accent-hover: #7a0000;
+      --bg:           #f5f0e8;
+      --ink:          #1a1a18;
+      --muted:        #5a5a56;
+      --faint:        #8a8a84;
+      --rule:         #ddd8cc;
+    }
+
+    body {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 18px;
+      line-height: 1.65;
+      color: var(--ink);
+      background: var(--bg);
+      border-top: 4px solid var(--accent);
+    }
+
+    .wrap {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 5rem;
+    }
+
+    a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+    a:hover { color: var(--accent-hover); }
+
+    /* ── BACK LINK ───────────────────────────────────────────── */
+
+    .back {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      margin-bottom: 2.5rem;
+      display: block;
+      text-decoration: none;
+      color: var(--faint);
+    }
+
+    .back:hover { color: var(--accent); }
+
+    /* ── POST HEADER ─────────────────────────────────────────── */
+
+    .post-header { margin-bottom: 1.5rem; }
+
+    .post-header h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      line-height: 1.2;
+      margin-bottom: 0.3rem;
+    }
+
+    .post-date {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--faint);
+    }
+
+    .post-description {
+      color: var(--muted);
+      font-style: italic;
+      margin-top: 0.4rem;
+      font-size: 1rem;
+    }
+
+    /* ── DIVIDER ─────────────────────────────────────────────── */
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--rule);
+      margin: 1.5rem 0;
+    }
+
+    /* ── POST CONTENT ────────────────────────────────────────── */
+
+    .post-content p          { margin-bottom: 1rem; }
+    .post-content h2         { font-size: 1.3rem; font-weight: 600; margin: 2rem 0 0.5rem; }
+    .post-content h3         { font-size: 1.1rem; font-weight: 600; margin: 1.5rem 0 0.4rem; }
+    .post-content ul,
+    .post-content ol         { padding-left: 1.4rem; margin-bottom: 1rem; }
+    .post-content li         { margin-bottom: 0.25rem; }
+    .post-content blockquote {
+      border-left: 3px solid var(--rule);
+      padding-left: 1rem;
+      color: var(--muted);
+      font-style: italic;
+      margin: 1.25rem 0;
+    }
+    .post-content code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82em;
+      background: var(--rule);
+      padding: 0.1em 0.35em;
+      border-radius: 3px;
+    }
+    .post-content pre {
+      background: var(--rule);
+      padding: 1rem;
+      border-radius: 4px;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+    .post-content pre code { background: none; padding: 0; }
+    .post-content hr {
+      border: none;
+      border-top: 1px solid var(--rule);
+      margin: 2rem 0;
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <a class="back" href="https://dominicmascetti.com/#blog">← back</a>
+
+  <div class="post-header">
+    <h1>Post Title</h1>
+    <div class="post-date">05-21-2026</div>
+    <p class="post-description">A short description of the post.</p>
+  </div>
+
+  <hr>
+
+  <div class="post-content">
+    <p>Your post content starts here.</p>
+  </div>
+
+</div>
+</body>
+</html>
