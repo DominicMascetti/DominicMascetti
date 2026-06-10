@@ -194,7 +194,7 @@
   </section>
 
   <section id="contact" class="tab">
-  <p>Feel free to reach out via <a href="mailto:dmascett@uci.edu">email</a>.</p>
+  <p>Feel free to reach out via <span id="email-copy" style="color:var(--accent); cursor:pointer; text-decoration:underline; text-underline-offset:2px;" onclick="copyEmail()">email</span>.</p>
 </section>
 
 </div>
@@ -219,6 +219,12 @@ function show(id, btn) {
   document.getElementById(id).classList.add('active');
   btn.classList.add('active');
   window.location.hash = id;
+}
+function copyEmail() {
+  navigator.clipboard.writeText('you@example.com');
+  const el = document.getElementById('email-copy');
+  el.textContent = 'copied!';
+  setTimeout(() => el.textContent = 'email', 1500);
 }
 </script>
 </body>
