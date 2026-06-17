@@ -136,21 +136,13 @@
     .friend:first-child { padding-top: 0; }
 
     /* ── TAGS & FILTER ───────────────────────────────────────── */
-  .tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; cursor: pointer; user-select: none; }
-  .tag:hover { opacity: 0.7; }
+  .tag { font-family: 'JetBrains Mono', monospace; font-size: 10px;}
   .t-ai   { color: #c07840; }
   .t-film { color: #9e6b7a; }
   .t-food { color: #6b8c6e; }
   .t-meta { color: #7a8aaa; }
 
-  .fbar { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--faint); display: flex; align-items: center; gap: 6px; max-height: 0; overflow: hidden; margin-bottom: 0; transition: max-height .2s, margin-bottom .2s; }
-  .fbar.on { max-height: 20px; margin-bottom: 0.6rem; }
-  .fbar-clr { cursor: pointer; }
-  .fbar-clr:hover { color: var(--accent); }
-
   .post-item .post-date-row { display: flex; align-items: center; gap: 10px; margin-top: 0.15rem; }
-  .post-item { transition: opacity .2s; }
-  .post-item.dim { opacity: 0.16; }
 
   </style>
 </head>
@@ -177,7 +169,6 @@
   </section>
 
   <section id="blog" class="tab">
-  <div class="fbar" id="fbar">filtering: <span id="ftag"></span>&nbsp;<span class="fbar-clr" id="fbar-clr">× clear</span></div>
 
     <!-- Copy this block for each new post, newest at the top -->
       <div class="post-item" data-tag="ai">
@@ -250,28 +241,7 @@ function copyEmail() {
   el.textContent = 'copied!';
   setTimeout(() => el.textContent = 'email', 1500);
 }
-(function() {
-  let active = null;
-  function applyFilter(tag) {
-    if (active === tag) { reset(); return; }
-    active = tag;
-    document.querySelectorAll('.post-item').forEach(p =>
-      p.classList.toggle('dim', p.dataset.tag !== tag));
-    const ft = document.getElementById('ftag');
-    ft.textContent = '[' + tag + ']';
-    ft.className = 'tag t-' + tag;
-    document.getElementById('fbar').classList.add('on');
-  }
-  function reset() {
-    active = null;
-    document.querySelectorAll('.post-item').forEach(p => p.classList.remove('dim'));
-    document.getElementById('fbar').classList.remove('on');
-  }
-  document.addEventListener('click', function(e) {
-    if (e.target.matches('.tag[data-tag]')) applyFilter(e.target.dataset.tag);
-    if (e.target.id === 'fbar-clr') reset();
-  });
-})();
+
 </script>
 </body>
 </html>
