@@ -178,6 +178,18 @@
 
   <section id="blog" class="tab">
 
+    <form action="https://buttondown.com/api/emails/embed-subscribe/YOUR-BUTTONDOWN-USERNAME"
+        method="post"
+        style="display:flex; gap:0.5rem; align-items:center; margin-bottom:1.5rem; padding-bottom:1rem; border-bottom:1px solid var(--rule);">
+    <input type="email" name="email" required placeholder="you@example.com"
+          style="flex:1; font-family:'EB Garamond', Georgia, serif; font-size:0.95rem; padding:0.4rem 0.6rem; border:1px solid var(--rule); border-radius:4px; background:#fff; color:var(--ink);" />
+    <input type="hidden" value="1" name="embed" />
+    <button type="submit"
+            style="font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:0.04em; background:var(--accent); color:var(--bg); border:none; border-radius:4px; padding:0.5rem 0.9rem; cursor:pointer;">
+      notify me
+    </button>
+  </form>
+
     <!-- Copy this block for each new post, newest at the top -->
       <div class="post-item" data-tag="film">
   <div class="post-title"><a href="posts/disappointment-day.html">Disappointment Day</a></div>

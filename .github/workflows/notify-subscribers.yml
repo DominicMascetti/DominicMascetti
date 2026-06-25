@@ -1,0 +1,59 @@
+name: Notify subscribers of new post
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'posts/*.html'
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Find newly added post files
+        id: find
+        run: |
+          BEFORE="${{ github.event.before }}"
+          # Fall back to comparing against the previous commit if this is the
+          # first push to the branch (before-SHA is all zeros in that case).
+          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            BEFORE=$(git rev-parse HEAD^ 2>/dev/null || echo "${{ github.sha }}")
+          fi
+
+          NEW_FILES=$(git diff --name-only --diff-filter=A "$BEFORE" "${{ github.sha }}" -- 'posts/*.html')
+          echo "files<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$NEW_FILES" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Send notification email for each new post
+        if: steps.find.outputs.files != ''
+        env:
+          BUTTONDOWN_API_KEY: ${{ secrets.BUTTONDOWN_API_KEY }}
+          SITE_URL: https://dominicmascetti.com
+        run: |
+          echo "${{ steps.find.outputs.files }}" | while IFS= read -r file; do
+            [ -z "$file" ] && continue
+
+            TITLE=$(grep -oP '(?<=<h1>).*?(?=</h1>)' "$file" | head -1)
+            DESC=$(grep -oP '(?<=class="post-description">).*?(?=</p>)' "$file" | head -1)
+            URL="$SITE_URL/$file"
+
+            echo "Notifying subscribers about: $TITLE ($URL)"
+
+            BODY=$(jq -n \
+              --arg subject "$TITLE" \
+              --arg desc "$DESC" \
+              --arg url "$URL" \
+              '{subject: $subject, body: ($desc + "\n\nRead it here: " + $url), status: "about_to_send"}')
+
+            curl -sS -X POST https://api.buttondown.com/v1/emails \
+              -H "Authorization: Token $BUTTONDOWN_API_KEY" \
+              -H "X-API-Version: 2026-04-01" \
+              -H "X-Buttondown-Live-Dangerously: true" \
+              -H "Content-Type: application/json" \
+              -d "$BODY"
+          done
