@@ -5,6 +5,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Post Title — Dominic</title>
+
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Post Title" />
+  <meta property="og:description" content="A short description of the post." />
+  <meta property="og:url" content="https://dominicmascetti.com/posts/post-slug.html" />
+  <meta property="og:site_name" content="Dominic Mascetti" />
+  <meta name="theme-color" content="#5c0000" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Post Title" />
+  <meta name="twitter:description" content="A short description of the post." />
+
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -123,7 +134,19 @@
       margin: 1.25rem 0;
       display: block;
     }
-  </style>
+
+    /* ── COMMENTS ────────────────────────────────────────────── */
+
+    .comments-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      color: var(--faint);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    #comments { margin-top: 0.5rem; }
   </style>
 </head>
 <body>
@@ -141,6 +164,27 @@
 
   <div class="post-content">
     <p>Your post content starts here.</p>
+  </div>
+
+  <hr>
+
+  <div class="comments-label">Comments</div>
+  <div id="comments">
+    <script src="https://giscus.app/client.js"
+            data-repo="DominicMascetti/DominicMascetti"
+            data-repo-id="R_kgDOSjf0bg"
+            data-category="Announcements"
+            data-category-id="DIC_kwDOSjf0bs4C_12I"
+            data-mapping="pathname"
+            data-strict="1"
+            data-reactions-enabled="1"
+            data-emit-metadata="0"
+            data-input-position="bottom"
+            data-theme="noborder_light"
+            data-lang="en"
+            crossorigin="anonymous"
+            async>
+    </script>
   </div>
 
 </div>
