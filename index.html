@@ -184,7 +184,7 @@
         method="post"
         target="bd_hidden_iframe"
         style="display:flex; gap:0.6rem; align-items:center;"
-        onsubmit="document.getElementById('subscribe-msg').textContent='thanks — check your inbox to confirm.'; this.reset();">
+        onsubmit="document.getElementById('subscribe-msg').textContent='thanks — check your inbox to confirm.'; var f=this; setTimeout(function(){ f.reset(); }, 0);">
     <input type="email" name="email" required placeholder="you@example.com"
            style="flex:1; min-width:0; font-family:'EB Garamond', Georgia, serif; font-size:0.95rem; padding:0.1rem 0; border:none; border-bottom:1px solid var(--rule); background:transparent; color:var(--ink); outline:none;" />
     <input type="hidden" value="1" name="embed" />
