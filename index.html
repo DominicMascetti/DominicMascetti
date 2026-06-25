@@ -178,17 +178,24 @@
 
   <section id="blog" class="tab">
 
-    <form action="https://buttondown.com/api/emails/embed-subscribe/DominicMascetti"
+    <div style="margin-bottom:1.25rem; padding-bottom:0.75rem; border-bottom:1px solid var(--rule);">
+  <form id="subscribe-form"
+        action="https://buttondown.com/api/emails/embed-subscribe/YOUR-BUTTONDOWN-USERNAME"
         method="post"
-        style="display:flex; gap:0.5rem; align-items:center; margin-bottom:1.5rem; padding-bottom:1rem; border-bottom:1px solid var(--rule);">
+        target="bd_hidden_iframe"
+        style="display:flex; gap:0.6rem; align-items:center;"
+        onsubmit="document.getElementById('subscribe-msg').textContent='thanks — check your inbox to confirm.'; this.reset();">
     <input type="email" name="email" required placeholder="you@example.com"
-          style="flex:1; font-family:'EB Garamond', Georgia, serif; font-size:0.95rem; padding:0.4rem 0.6rem; border:1px solid var(--rule); border-radius:4px; background:#fff; color:var(--ink);" />
+           style="flex:1; min-width:0; font-family:'EB Garamond', Georgia, serif; font-size:0.95rem; padding:0.2rem 0; border:none; border-bottom:1px solid var(--rule); background:transparent; color:var(--ink); outline:none;" />
     <input type="hidden" value="1" name="embed" />
     <button type="submit"
-            style="font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:0.04em; background:var(--accent); color:var(--bg); border:none; border-radius:4px; padding:0.5rem 0.9rem; cursor:pointer;">
-      notify me
+            style="font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:0.04em; background:none; border:none; color:var(--accent); cursor:pointer; padding:0; white-space:nowrap;">
+      notify me →
     </button>
   </form>
+  <div id="subscribe-msg" style="font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--faint); margin-top:0.4rem; min-height:1em;"></div>
+</div>
+<iframe name="bd_hidden_iframe" style="display:none;" title="subscribe"></iframe>
 
     <!-- Copy this block for each new post, newest at the top -->
       <div class="post-item" data-tag="film">
