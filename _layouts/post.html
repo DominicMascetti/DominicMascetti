@@ -159,6 +159,7 @@
 
   <hr>
 
+  <div id="comments-loading" style="font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--faint);">loading comments…</div>
   <div id="comments">
     <script src="https://giscus.app/client.js"
             data-repo="DominicMascetti/DominicMascetti"
@@ -168,7 +169,7 @@
             data-mapping="pathname"
             data-strict="1"
             data-reactions-enabled="0"
-            data-emit-metadata="0"
+            data-emit-metadata="1"
             data-input-position="bottom"
             data-theme="https://dominicmascetti.com/assets/giscus-theme.css"
             data-lang="en"
@@ -176,6 +177,15 @@
             async>
     </script>
   </div>
+  <script>
+    window.addEventListener('message', function (e) {
+      if (e.origin !== 'https://giscus.app') return;
+      if (e.data && e.data.giscus && e.data.giscus.discussion) {
+        var el = document.getElementById('comments-loading');
+        if (el) el.style.display = 'none';
+      }
+    });
+  </script>
 
 </div>
 </body>

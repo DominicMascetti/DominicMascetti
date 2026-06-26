@@ -88,3 +88,49 @@ main {
 .gsc-comment:not(.gsc-reply-box) .gsc-replies {
   border-radius: unset;
 }
+
+/* ── Further decluttering pass: quiet down the GitHub-app chrome ── */
+
+/* Hide the markdown formatting toolbar icon and "Styling with Markdown
+   is supported" hint - pure visual noise for a short comment box. */
+.gsc-comment-box-md-toolbar,
+.gsc-comment-box-markdown-hint {
+  display: none !important;
+}
+
+/* Flatten the Write/Preview tabs into plain text toggles instead of
+   boxed browser-tab shapes, matching the site's own nav buttons. */
+.gsc-comment-box-tabs button {
+  border-radius: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 11px !important;
+  letter-spacing: 0.04em !important;
+  box-shadow: none !important;
+}
+
+/* Flatten the comment/reply buttons - thin border instead of the
+   default rounded "app button" shape. */
+.gsc-comment-box-buttons .btn,
+.gsc-reply-box .btn {
+  border-radius: 3px !important;
+  box-shadow: none !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 11px !important;
+  letter-spacing: 0.04em !important;
+}
+
+/* Shrink the avatar slightly so it reads as a small detail rather
+   than a dominant GitHub-profile-card element. */
+.gsc-comment-author-avatar {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+/* Thin underline-style textarea border instead of a heavy boxed
+   input, echoing the subscribe form's input style. */
+.gsc-comment-box-textarea {
+  border-radius: 3px !important;
+  box-shadow: none !important;
+}
