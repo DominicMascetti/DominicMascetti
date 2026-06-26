@@ -1,0 +1,17 @@
+title: Dominic Mascetti
+url: "https://dominicmascetti.com"
+
+# Reproduces the exact existing URL pattern (posts/disappointment-day.html, etc.)
+# so giscus comment mappings and any already-shared links keep working.
+permalink: /posts/:slug.html
+
+markdown: kramdown
+
+# Anything in _posts automatically gets layout: post — you don't need to add
+# "layout: post" to your front matter, it's applied for you.
+defaults:
+  - scope:
+      path: ""
+      type: "posts"
+    values:
+      layout: "post"

@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'posts/*.html'
+      - '_posts/*.md'
 
 jobs:
   notify:
@@ -18,13 +18,11 @@ jobs:
         id: find
         run: |
           BEFORE="${{ github.event.before }}"
-          # Fall back to comparing against the previous commit if this is the
-          # first push to the branch (before-SHA is all zeros in that case).
           if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
             BEFORE=$(git rev-parse HEAD^ 2>/dev/null || echo "${{ github.sha }}")
           fi
 
-          NEW_FILES=$(git diff --name-only --diff-filter=A "$BEFORE" "${{ github.sha }}" -- 'posts/*.html')
+          NEW_FILES=$(git diff --name-only --diff-filter=A "$BEFORE" "${{ github.sha }}" -- '_posts/*.md')
           echo "files<<EOF" >> "$GITHUB_OUTPUT"
           echo "$NEW_FILES" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
@@ -38,9 +36,13 @@ jobs:
           echo "${{ steps.find.outputs.files }}" | while IFS= read -r file; do
             [ -z "$file" ] && continue
 
-            TITLE=$(grep -oP '(?<=<h1>).*?(?=</h1>)' "$file" | head -1)
-            DESC=$(grep -oP '(?<=class="post-description">).*?(?=</p>)' "$file" | head -1)
-            URL="$SITE_URL/$file"
+            # Pull values straight out of the YAML front matter — no more
+            # parsing rendered HTML.
+            TITLE=$(sed -n 's/^title:[[:space:]]*//p' "$file" | head -1 | sed 's/^"//; s/"$//')
+            DESC=$(sed -n 's/^description:[[:space:]]*//p' "$file" | head -1 | sed 's/^"//; s/"$//')
+            SLUG=$(sed -n 's/^slug:[[:space:]]*//p' "$file" | head -1)
+
+            URL="$SITE_URL/posts/$SLUG.html"
 
             echo "Notifying subscribers about: $TITLE ($URL)"
 

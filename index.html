@@ -1,3 +1,5 @@
+---
+---
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -142,6 +144,7 @@
   .t-meta     { color: #7a8aaa; }
   .t-social   { color: #8a6aa0; }
   .t-personal { color: #47857a; }
+  .t-food     { color: #6b8c52; }
   .t-music    {
     background: #8ace00;
     color: #1a1a18;
@@ -179,51 +182,34 @@
   <section id="blog" class="tab">
 
     <div style="margin-bottom:0.6rem;">
-  <form id="subscribe-form"
-        action="https://buttondown.com/api/emails/embed-subscribe/DominicMascetti"
-        method="post"
-        target="bd_hidden_iframe"
-        style="display:flex; gap:0.6rem; align-items:center;"
-        onsubmit="document.getElementById('subscribe-msg').textContent='thanks — check your inbox to confirm.'; var f=this; setTimeout(function(){ f.reset(); }, 0);">
-    <input type="email" name="email" required placeholder="you@example.com"
-           style="flex:1; min-width:0; font-family:'EB Garamond', Georgia, serif; font-size:0.95rem; padding:0.1rem 0; border:none; border-bottom:1px solid var(--rule); background:transparent; color:var(--ink); outline:none;" />
-    <input type="hidden" value="1" name="embed" />
-    <button type="submit"
-            style="font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:0.04em; background:none; border:none; color:var(--accent); cursor:pointer; padding:0; white-space:nowrap;">
-      notify me →
-    </button>
-  </form>
-  <div id="subscribe-msg" style="font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--faint); margin-top:0.3rem;"></div>
-</div>
-<iframe name="bd_hidden_iframe" style="display:none;" title="subscribe"></iframe>
-
-    <!-- Copy this block for each new post, newest at the top -->
-      <div class="post-item" data-tag="film">
-  <div class="post-title"><a href="posts/disappointment-day.html">Disappointment Day</a></div>
-  <div class="post-date-row">
-    <div class="post-date">06-18-2026</div>
-    <span class="tag t-film" data-tag="film">[film]</span>
-  </div>
-  <div class="post-excerpt">Spielberg delivers the biggest nothingburger of the year</div>
-</div>
-
-      <div class="post-item" data-tag="ai">
-    <div class="post-title"><a href="posts/the-automated-teacher.html">The Automated Teacher</a></div>
-    <div class="post-date-row">
-      <div class="post-date">06-13-2026</div>
-      <span class="tag t-ai" data-tag="ai">[AI]</span>
+      <form id="subscribe-form"
+            action="https://buttondown.com/api/emails/embed-subscribe/DominicMascetti"
+            method="post"
+            target="bd_hidden_iframe"
+            style="display:flex; gap:0.6rem; align-items:center;"
+            onsubmit="document.getElementById('subscribe-msg').textContent='thanks — check your inbox to confirm.'; var f=this; setTimeout(function(){ f.reset(); }, 0);">
+        <input type="email" name="email" required placeholder="you@example.com"
+               style="flex:1; min-width:0; font-family:'EB Garamond', Georgia, serif; font-size:0.95rem; padding:0.1rem 0; border:none; border-bottom:1px solid var(--rule); background:transparent; color:var(--ink); outline:none;" />
+        <input type="hidden" value="1" name="embed" />
+        <button type="submit"
+                style="font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:0.04em; background:none; border:none; color:var(--accent); cursor:pointer; padding:0; white-space:nowrap;">
+          notify me →
+        </button>
+      </form>
+      <div id="subscribe-msg" style="font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--faint); margin-top:0.3rem;"></div>
     </div>
-    <div class="post-excerpt">What does a productive teacher even look like?</div>
-  </div>
+    <iframe name="bd_hidden_iframe" style="display:none;" title="subscribe"></iframe>
 
-  <div class="post-item" data-tag="ai">
-    <div class="post-title"><a href="posts/you-should-have-an-honest-discussion-about-your-future.html">You should have an honest discussion about your future</a></div>
-    <div class="post-date-row">
-      <div class="post-date">05-22-2026</div>
-      <span class="tag t-ai" data-tag="ai">[AI]</span>
+    {% for post in site.posts %}
+    <div class="post-item" data-tag="{{ post.tag }}">
+      <div class="post-title"><a href="{{ post.url | relative_url }}">{{ post.title }}</a></div>
+      <div class="post-date-row">
+        <div class="post-date">{{ post.date | date: "%m-%d-%Y" }}</div>
+        <span class="tag t-{{ post.tag }}" data-tag="{{ post.tag }}">[{% if post.tag == "ai" %}AI{% else %}{{ post.tag }}{% endif %}]</span>
+      </div>
+      <div class="post-excerpt">{{ post.description }}</div>
     </div>
-    <div class="post-excerpt">AGI is AGI</div>
-  </div>
+    {% endfor %}
 
   </section>
 

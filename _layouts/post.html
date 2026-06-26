@@ -4,17 +4,17 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Post Title — Dominic</title>
+  <title>{{ page.title }} — Dominic</title>
 
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="Post Title" />
-  <meta property="og:description" content="A short description of the post." />
-  <meta property="og:url" content="https://dominicmascetti.com/posts/post-slug.html" />
+  <meta property="og:title" content="{{ page.title }}" />
+  <meta property="og:description" content="{{ page.description }}" />
+  <meta property="og:url" content="{{ page.url | absolute_url }}" />
   <meta property="og:site_name" content="Dominic Mascetti" />
   <meta name="theme-color" content="#5c0000" />
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Post Title" />
-  <meta name="twitter:description" content="A short description of the post." />
+  <meta name="twitter:title" content="{{ page.title }}" />
+  <meta name="twitter:description" content="{{ page.description }}" />
 
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
   <style>
@@ -155,15 +155,15 @@
   <a class="back" href="https://dominicmascetti.com/#blog">← back</a>
 
   <div class="post-header">
-    <h1>Post Title</h1>
-    <div class="post-date">05-21-2026</div>
-    <p class="post-description">A short description of the post.</p>
+    <h1>{{ page.title }}</h1>
+    <div class="post-date">{{ page.date | date: "%m-%d-%Y" }}</div>
+    <p class="post-description">{{ page.description }}</p>
   </div>
 
   <hr>
 
   <div class="post-content">
-    <p>Your post content starts here.</p>
+    {{ content }}
   </div>
 
   <hr>
