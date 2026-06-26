@@ -181,25 +181,6 @@
 
   <section id="blog" class="tab">
 
-    <div style="margin-bottom:0.6rem;">
-      <form id="subscribe-form"
-            action="https://buttondown.com/api/emails/embed-subscribe/DominicMascetti"
-            method="post"
-            target="bd_hidden_iframe"
-            style="display:flex; gap:0.6rem; align-items:center;"
-            onsubmit="document.getElementById('subscribe-msg').textContent='thanks — check your inbox to confirm.'; var f=this; setTimeout(function(){ f.reset(); }, 0);">
-        <input type="email" name="email" required placeholder="you@example.com"
-               style="flex:1; min-width:0; font-family:'EB Garamond', Georgia, serif; font-size:0.95rem; padding:0.1rem 0; border:none; border-bottom:1px solid var(--rule); background:transparent; color:var(--ink); outline:none;" />
-        <input type="hidden" value="1" name="embed" />
-        <button type="submit"
-                style="font-family:'JetBrains Mono', monospace; font-size:11px; letter-spacing:0.04em; background:none; border:none; color:var(--accent); cursor:pointer; padding:0; white-space:nowrap;">
-          notify me →
-        </button>
-      </form>
-      <div id="subscribe-msg" style="font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--faint); margin-top:0.3rem;"></div>
-    </div>
-    <iframe name="bd_hidden_iframe" style="display:none;" title="subscribe"></iframe>
-
     {% for post in site.posts %}
     <div class="post-item" data-tag="{{ post.tag }}">
       <div class="post-title"><a href="{{ post.url | relative_url }}">{{ post.title }}</a></div>
