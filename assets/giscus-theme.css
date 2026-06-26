@@ -1,4 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400&display=swap');
+
 main {
+  --font-family-default: 'EB Garamond', Georgia, serif;
+  --font-family-monospace: 'JetBrains Mono', monospace;
   --primary-default: 92, 0, 0;
   --bg-default: 245, 240, 232;
   --color-prettylights-syntax-comment: #6e7781;
