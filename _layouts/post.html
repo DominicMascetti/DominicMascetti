@@ -169,7 +169,7 @@
             data-mapping="pathname"
             data-strict="1"
             data-reactions-enabled="0"
-            data-emit-metadata="1"
+            data-emit-metadata="0"
             data-input-position="bottom"
             data-theme="https://dominicmascetti.com/assets/giscus-theme.css"
             data-lang="en"
@@ -178,13 +178,21 @@
     </script>
   </div>
   <script>
-    window.addEventListener('message', function (e) {
-      if (e.origin !== 'https://giscus.app') return;
-      if (e.data && e.data.giscus && e.data.giscus.discussion) {
+    (function () {
+      var hide = function () {
         var el = document.getElementById('comments-loading');
         if (el) el.style.display = 'none';
-      }
-    });
+      };
+      var container = document.getElementById('comments');
+      var observer = new MutationObserver(function () {
+        var frame = container.querySelector('iframe.giscus-frame');
+        if (frame) {
+          frame.addEventListener('load', hide);
+          observer.disconnect();
+        }
+      });
+      observer.observe(container, { childList: true, subtree: true });
+    })();
   </script>
 
 </div>
