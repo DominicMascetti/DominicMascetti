@@ -178,43 +178,10 @@
   </div>
   <iframe name="bd_hidden_iframe" style="display:none;" title="subscribe"></iframe>
 
-  <hr>
 
-  <div id="comments-loading" style="font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--faint);">loading comments…</div>
-  <div id="comments">
-    <script src="https://giscus.app/client.js"
-            data-repo="DominicMascetti/DominicMascetti"
-            data-repo-id="R_kgDOSjf0bg"
-            data-category="Announcements"
-            data-category-id="DIC_kwDOSjf0bs4C_12I"
-            data-mapping="pathname"
-            data-strict="1"
-            data-reactions-enabled="0"
-            data-emit-metadata="0"
-            data-input-position="bottom"
-            data-theme="https://dominicmascetti.com/assets/giscus-theme.css"
-            data-lang="en"
-            crossorigin="anonymous"
-            async>
-    </script>
-  </div>
-  <script>
-    (function () {
-      var hide = function () {
-        var el = document.getElementById('comments-loading');
-        if (el) el.style.display = 'none';
-      };
-      var container = document.getElementById('comments');
-      var observer = new MutationObserver(function () {
-        var frame = container.querySelector('iframe.giscus-frame');
-        if (frame) {
-          frame.addEventListener('load', hide);
-          observer.disconnect();
-        }
-      });
-      observer.observe(container, { childList: true, subtree: true });
-    })();
-  </script>
+
+
+
 
 </div>
 </body>
