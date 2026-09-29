@@ -1,15 +1,18 @@
 <section id="comments" class="comments" data-post="{{ page.url }}">
   <h2 class="comments-heading">comments</h2>
   <form class="comment-form" novalidate>
-    <input type="text" name="name" required maxlength="60" placeholder="name" autocomplete="name" aria-label="Name" />
-    <!-- Honeypot: hidden from people, tempting to bots. -->
-    <div class="comment-hp" aria-hidden="true">
-      <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off" /></label>
-    </div>
-    <textarea name="body" required maxlength="3000" rows="3" placeholder="say something" aria-label="Comment"></textarea>
-    <div class="comment-actions">
-      <span class="comment-msg" role="status"></span>
-      <button type="submit">post comment →</button>
+    <textarea name="body" required maxlength="3000" rows="1" placeholder="say something…" aria-label="Comment"></textarea>
+    <!-- Name and button stay hidden until someone starts a comment. -->
+    <div class="comment-extra">
+      <input type="text" name="name" required maxlength="60" placeholder="name" autocomplete="name" aria-label="Name" />
+      <!-- Honeypot: hidden from people, tempting to bots. -->
+      <div class="comment-hp" aria-hidden="true">
+        <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off" /></label>
+      </div>
+      <div class="comment-actions">
+        <button type="submit">post comment →</button>
+        <span class="comment-msg" role="status"></span>
+      </div>
     </div>
   </form>
 
@@ -25,11 +28,12 @@
     font-weight: 400;
     letter-spacing: 0.04em;
     color: var(--faint);
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
   }
-  .comment-form { margin-bottom: 1.75rem; }
   .comment-list { list-style: none; }
+  .comment-list:not(:empty) { margin-top: 1.75rem; }
   .comment { margin-bottom: 1.25rem; }
+  .comment:last-child { margin-bottom: 0; }
   .comment-meta {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
@@ -42,7 +46,7 @@
     font-style: italic;
     color: var(--muted);
     font-size: 1rem;
-    margin-bottom: 1rem;
+    margin-top: 1rem;
   }
   .comments-status:empty { display: none; }
   .comment-form input,
@@ -51,24 +55,28 @@
     width: 100%;
     font-family: 'EB Garamond', Georgia, serif;
     font-size: 0.95rem;
+    line-height: 1.5;
     color: var(--ink);
     background: transparent;
     border: none;
     border-bottom: 1px solid var(--rule);
+    border-radius: 0;
     padding: 0.1rem 0;
-    margin-bottom: 0.8rem;
     outline: none;
-    resize: vertical;
+    resize: none;
+    overflow: hidden;
   }
   .comment-form input:focus,
   .comment-form textarea:focus { border-bottom-color: var(--accent); }
-  .comment-form input { max-width: 16rem; }
+  .comment-extra { display: none; }
+  .comment-form.open .comment-extra { display: block; }
+  .comment-form input { max-width: 16rem; margin-top: 0.8rem; }
   .comment-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
   .comment-actions {
     display: flex;
-    justify-content: space-between;
     align-items: baseline;
     gap: 1rem;
+    margin-top: 0.9rem;
   }
   .comment-msg {
     font-family: 'JetBrains Mono', monospace;
@@ -104,6 +112,7 @@
   var form = section.querySelector('.comment-form');
   var msg = section.querySelector('.comment-msg');
   var button = form.querySelector('button');
+  var textarea = form.elements.body;
   var headers = { apikey: SUPABASE_KEY };
   var approved = [];
 
@@ -187,7 +196,7 @@
       li.append(meta, body);
       list.append(li);
     });
-    status.textContent = comments.length ? '' : 'no comments yet.';
+    status.textContent = '';
   }
 
   function load() {
@@ -205,6 +214,21 @@
       });
   }
 
+  // Grow the box with its contents instead of showing a resize handle.
+  function fit() {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+  }
+
+  function collapse() {
+    form.reset();
+    form.classList.remove('open');
+    fit();
+  }
+
+  textarea.addEventListener('focus', function () { form.classList.add('open'); });
+  textarea.addEventListener('input', fit);
+
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     var name = form.elements.name.value.trim();
@@ -212,7 +236,7 @@
     if (!name || !body) { msg.textContent = 'name and comment, please.'; return; }
 
     // Bots fill the honeypot; act like it worked and send nothing.
-    if (form.elements.website.value) { form.reset(); return; }
+    if (form.elements.website.value) { collapse(); return; }
 
     var token = crypto.randomUUID();
     button.disabled = true;
@@ -225,7 +249,7 @@
       .then(function (res) {
         if (!res.ok) throw new Error(res.status);
         writePending(readPending().concat({ token: token, name: name, body: body, created_at: new Date().toISOString() }));
-        form.reset();
+        collapse();
         msg.textContent = '';
         render();
         setTimeout(load, RELOAD_DELAY_MS);
