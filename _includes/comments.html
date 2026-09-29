@@ -95,6 +95,7 @@
   var SUPABASE_URL = {{ site.supabase_url | jsonify }};
   var SUPABASE_KEY = {{ site.supabase_key | jsonify }};
   var RELOAD_DELAY_MS = 2500;
+  var PENDING_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
   var section = document.getElementById('comments');
   var post = section.getAttribute('data-post');
@@ -104,6 +105,34 @@
   var msg = section.querySelector('.comment-msg');
   var button = form.querySelector('button');
   var headers = { apikey: SUPABASE_KEY };
+  var approved = [];
+
+  // The visitor's own comments that aren't approved yet, kept in their browser
+  // so they show up for them straight away (and only for them).
+  var pendingKey = 'pending-comments:' + post;
+
+  function readPending() {
+    try { return JSON.parse(localStorage.getItem(pendingKey)) || []; } catch (e) { return []; }
+  }
+
+  function writePending(pending) {
+    try {
+      if (pending.length) localStorage.setItem(pendingKey, JSON.stringify(pending));
+      else localStorage.removeItem(pendingKey);
+    } catch (e) { /* storage unavailable; the comment just won't persist locally */ }
+  }
+
+  // Drop pending comments that are now approved (or too old to be worth showing).
+  function stillPending() {
+    var cutoff = Date.now() - PENDING_MAX_AGE_MS;
+    var pending = readPending().filter(function (p) {
+      return new Date(p.created_at).getTime() > cutoff && !approved.some(function (c) {
+        return c.name === p.name && c.body === p.body;
+      });
+    });
+    writePending(pending);
+    return pending;
+  }
 
   function formatDate(iso) {
     var d = new Date(iso);
@@ -111,7 +140,10 @@
     return pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + '-' + d.getFullYear();
   }
 
-  function render(comments) {
+  function render() {
+    var comments = approved.concat(stillPending()).sort(function (a, b) {
+      return new Date(a.created_at) - new Date(b.created_at);
+    });
     list.replaceChildren();
     comments.forEach(function (c) {
       var li = document.createElement('li');
@@ -143,8 +175,11 @@
         if (!res.ok) throw new Error(res.status);
         return res.json();
       })
-      .then(render)
-      .catch(function () { status.textContent = "couldn't load comments."; });
+      .then(function (rows) { approved = rows; render(); })
+      .catch(function () {
+        render();
+        if (!list.children.length) status.textContent = "couldn't load comments.";
+      });
   }
 
   form.addEventListener('submit', function (e) {
@@ -153,13 +188,8 @@
     var body = form.elements.body.value.trim();
     if (!name || !body) { msg.textContent = 'name and comment, please.'; return; }
 
-    function done() {
-      form.reset();
-      msg.textContent = 'thanks — your comment will appear once approved.';
-    }
-
     // Bots fill the honeypot; act like it worked and send nothing.
-    if (form.elements.website.value) { done(); return; }
+    if (form.elements.website.value) { form.reset(); return; }
 
     button.disabled = true;
     msg.textContent = 'posting…';
@@ -170,7 +200,10 @@
     })
       .then(function (res) {
         if (!res.ok) throw new Error(res.status);
-        done();
+        writePending(readPending().concat({ name: name, body: body, created_at: new Date().toISOString() }));
+        form.reset();
+        msg.textContent = '';
+        render();
         setTimeout(load, RELOAD_DELAY_MS);
       })
       .catch(function () { msg.textContent = "couldn't post that — try again?"; })
