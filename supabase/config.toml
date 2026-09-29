@@ -1,0 +1,5 @@
+project_id = "lkhasrwsvrxahvynpawv"
+
+# The database webhook authenticates with the x-webhook-secret header instead of a JWT.
+[functions.moderate-comment]
+verify_jwt = false

@@ -2,7 +2,7 @@ title: Dominic Mascetti
 url: "https://dominicmascetti.com"
 
 # Reproduces the exact existing URL pattern (posts/disappointment-day.html, etc.)
-# so giscus comment mappings and any already-shared links keep working.
+# so any already-shared links keep working.
 permalink: /posts/:slug.html
 
 markdown: kramdown
@@ -15,3 +15,14 @@ defaults:
       type: "posts"
     values:
       layout: "post"
+
+# Comments (see _includes/comments.html). The publishable key is safe to ship:
+# row-level security limits it to reading approved comments and adding new ones.
+supabase_url: https://lkhasrwsvrxahvynpawv.supabase.co
+supabase_key: sb_publishable_7WQtyNK8NLIPXqiFrEyBjQ_o_oJvid8
+
+# Supabase backend (migrations, edge function) stays out of the published site.
+exclude:
+  - supabase
+  - "*.sql"
+  - "**/*.sql"

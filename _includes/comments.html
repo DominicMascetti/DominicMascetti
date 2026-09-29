@@ -1,0 +1,181 @@
+<section id="comments" class="comments" data-post="{{ page.url }}">
+  <h2 class="comments-heading">comments</h2>
+  <ol class="comment-list" aria-live="polite"></ol>
+  <p class="comments-status"></p>
+
+  <form class="comment-form" novalidate>
+    <input type="text" name="name" required maxlength="60" placeholder="name" autocomplete="name" aria-label="Name" />
+    <!-- Honeypot: hidden from people, tempting to bots. -->
+    <div class="comment-hp" aria-hidden="true">
+      <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off" /></label>
+    </div>
+    <textarea name="body" required maxlength="3000" rows="4" placeholder="say something" aria-label="Comment"></textarea>
+    <div class="comment-actions">
+      <span class="comment-msg" role="status"></span>
+      <button type="submit">post comment →</button>
+    </div>
+  </form>
+</section>
+
+<style>
+  .comments { margin-bottom: 1.5rem; }
+  .comments-heading {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    color: var(--faint);
+    margin-bottom: 1rem;
+  }
+  .comment-list { list-style: none; }
+  .comment { margin-bottom: 1.25rem; }
+  .comment-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--faint);
+    margin-bottom: 0.15rem;
+  }
+  .comment-author { color: var(--accent); margin-right: 0.6rem; }
+  .comment-body { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .comments-status {
+    font-style: italic;
+    color: var(--muted);
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+  .comments-status:empty { display: none; }
+  .comment-form input,
+  .comment-form textarea {
+    display: block;
+    width: 100%;
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 0.95rem;
+    color: var(--ink);
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--rule);
+    padding: 0.1rem 0;
+    margin-bottom: 0.8rem;
+    outline: none;
+    resize: vertical;
+  }
+  .comment-form input:focus,
+  .comment-form textarea:focus { border-bottom-color: var(--accent); }
+  .comment-form input { max-width: 16rem; }
+  .comment-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  .comment-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+  }
+  .comment-msg {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--faint);
+  }
+  .comment-form button {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    background: none;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    padding: 0;
+    white-space: nowrap;
+  }
+  .comment-form button:hover { color: var(--accent-hover); }
+  .comment-form button:disabled { color: var(--faint); cursor: default; }
+</style>
+
+<script>
+(function () {
+  var SUPABASE_URL = {{ site.supabase_url | jsonify }};
+  var SUPABASE_KEY = {{ site.supabase_key | jsonify }};
+  var RELOAD_DELAY_MS = 2500;
+
+  var section = document.getElementById('comments');
+  var post = section.getAttribute('data-post');
+  var list = section.querySelector('.comment-list');
+  var status = section.querySelector('.comments-status');
+  var form = section.querySelector('.comment-form');
+  var msg = section.querySelector('.comment-msg');
+  var button = form.querySelector('button');
+  var headers = { apikey: SUPABASE_KEY };
+
+  function formatDate(iso) {
+    var d = new Date(iso);
+    function pad(n) { return String(n).padStart(2, '0'); }
+    return pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + '-' + d.getFullYear();
+  }
+
+  function render(comments) {
+    list.replaceChildren();
+    comments.forEach(function (c) {
+      var li = document.createElement('li');
+      li.className = 'comment';
+
+      var meta = document.createElement('div');
+      meta.className = 'comment-meta';
+      var author = document.createElement('span');
+      author.className = 'comment-author';
+      author.textContent = c.name;
+      var date = document.createElement('span');
+      date.textContent = formatDate(c.created_at);
+      meta.append(author, date);
+
+      var body = document.createElement('p');
+      body.className = 'comment-body';
+      body.textContent = c.body;
+
+      li.append(meta, body);
+      list.append(li);
+    });
+    status.textContent = comments.length ? '' : 'no comments yet.';
+  }
+
+  function load() {
+    var query = 'select=id,name,body,created_at&order=created_at.asc&post=eq.' + encodeURIComponent(post);
+    return fetch(SUPABASE_URL + '/rest/v1/comments?' + query, { headers: headers })
+      .then(function (res) {
+        if (!res.ok) throw new Error(res.status);
+        return res.json();
+      })
+      .then(render)
+      .catch(function () { status.textContent = "couldn't load comments."; });
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = form.elements.name.value.trim();
+    var body = form.elements.body.value.trim();
+    if (!name || !body) { msg.textContent = 'name and comment, please.'; return; }
+
+    function done() {
+      form.reset();
+      msg.textContent = 'thanks — your comment will appear once approved.';
+    }
+
+    // Bots fill the honeypot; act like it worked and send nothing.
+    if (form.elements.website.value) { done(); return; }
+
+    button.disabled = true;
+    msg.textContent = 'posting…';
+    fetch(SUPABASE_URL + '/rest/v1/comments', {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }, headers),
+      body: JSON.stringify({ post: post, name: name, body: body })
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error(res.status);
+        done();
+        setTimeout(load, RELOAD_DELAY_MS);
+      })
+      .catch(function () { msg.textContent = "couldn't post that — try again?"; })
+      .then(function () { button.disabled = false; });
+  });
+
+  load();
+})();
+</script>

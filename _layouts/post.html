@@ -134,10 +134,6 @@
       margin: 1.25rem 0;
       display: block;
     }
-
-    /* ── COMMENTS ────────────────────────────────────────────── */
-
-    #comments { margin-top: 0.5rem; }
   </style>
 </head>
 <body>
@@ -159,6 +155,10 @@
 
   <hr>
 
+  {% include comments.html %}
+
+  <hr>
+
   <div style="margin-bottom:0.6rem;">
     <form id="subscribe-form"
           action="https://buttondown.com/api/emails/embed-subscribe/DominicMascetti"
@@ -177,11 +177,6 @@
     <div id="subscribe-msg" style="font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--faint); margin-top:0.3rem;"></div>
   </div>
   <iframe name="bd_hidden_iframe" style="display:none;" title="subscribe"></iframe>
-
-
-
-
-
 
 </div>
 </body>
