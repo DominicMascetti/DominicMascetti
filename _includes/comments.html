@@ -122,6 +122,28 @@
     } catch (e) { /* storage unavailable; the comment just won't persist locally */ }
   }
 
+  // Ask what happened to our pending comments and forget any that were
+  // rejected or deleted. Only the holder of a token can ask about it.
+  function checkPending() {
+    var tokens = readPending().map(function (p) { return p.token; }).filter(Boolean);
+    if (!tokens.length) return Promise.resolve();
+    return fetch(SUPABASE_URL + '/rest/v1/rpc/comment_status', {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, headers),
+      body: JSON.stringify({ tokens: tokens })
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error(res.status);
+        return res.json();
+      })
+      .then(function (rows) {
+        var removed = rows.filter(function (r) { return r.status === 'removed'; })
+                          .map(function (r) { return r.token; });
+        writePending(readPending().filter(function (p) { return removed.indexOf(p.token) === -1; }));
+      })
+      .catch(function () { /* keep showing them; try again next load */ });
+  }
+
   // Drop pending comments that are now approved (or too old to be worth showing).
   function stillPending() {
     var cutoff = Date.now() - PENDING_MAX_AGE_MS;
@@ -170,12 +192,13 @@
 
   function load() {
     var query = 'select=id,name,body,created_at&order=created_at.asc&post=eq.' + encodeURIComponent(post);
-    return fetch(SUPABASE_URL + '/rest/v1/comments?' + query, { headers: headers })
+    var comments = fetch(SUPABASE_URL + '/rest/v1/comments?' + query, { headers: headers })
       .then(function (res) {
         if (!res.ok) throw new Error(res.status);
         return res.json();
-      })
-      .then(function (rows) { approved = rows; render(); })
+      });
+    return Promise.all([comments, checkPending()])
+      .then(function (results) { approved = results[0]; render(); })
       .catch(function () {
         render();
         if (!list.children.length) status.textContent = "couldn't load comments.";
@@ -191,16 +214,17 @@
     // Bots fill the honeypot; act like it worked and send nothing.
     if (form.elements.website.value) { form.reset(); return; }
 
+    var token = crypto.randomUUID();
     button.disabled = true;
     msg.textContent = 'posting…';
     fetch(SUPABASE_URL + '/rest/v1/comments', {
       method: 'POST',
       headers: Object.assign({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }, headers),
-      body: JSON.stringify({ post: post, name: name, body: body })
+      body: JSON.stringify({ post: post, name: name, body: body, client_token: token })
     })
       .then(function (res) {
         if (!res.ok) throw new Error(res.status);
-        writePending(readPending().concat({ name: name, body: body, created_at: new Date().toISOString() }));
+        writePending(readPending().concat({ token: token, name: name, body: body, created_at: new Date().toISOString() }));
         form.reset();
         msg.textContent = '';
         render();
