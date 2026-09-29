@@ -1,20 +1,20 @@
 <section id="comments" class="comments" data-post="{{ page.url }}">
   <h2 class="comments-heading">comments</h2>
-  <ol class="comment-list" aria-live="polite"></ol>
-  <p class="comments-status"></p>
-
   <form class="comment-form" novalidate>
     <input type="text" name="name" required maxlength="60" placeholder="name" autocomplete="name" aria-label="Name" />
     <!-- Honeypot: hidden from people, tempting to bots. -->
     <div class="comment-hp" aria-hidden="true">
       <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off" /></label>
     </div>
-    <textarea name="body" required maxlength="3000" rows="4" placeholder="say something" aria-label="Comment"></textarea>
+    <textarea name="body" required maxlength="3000" rows="3" placeholder="say something" aria-label="Comment"></textarea>
     <div class="comment-actions">
       <span class="comment-msg" role="status"></span>
       <button type="submit">post comment →</button>
     </div>
   </form>
+
+  <ol class="comment-list" aria-live="polite"></ol>
+  <p class="comments-status"></p>
 </section>
 
 <style>
@@ -27,6 +27,7 @@
     color: var(--faint);
     margin-bottom: 1rem;
   }
+  .comment-form { margin-bottom: 1.75rem; }
   .comment-list { list-style: none; }
   .comment { margin-bottom: 1.25rem; }
   .comment-meta {

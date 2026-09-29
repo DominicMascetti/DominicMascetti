@@ -134,6 +134,22 @@
       margin: 1.25rem 0;
       display: block;
     }
+
+    /* ── SUBSCRIBE ───────────────────────────────────────────── */
+
+    .subscribe { margin-bottom: 0.6rem; }
+    .subscribe summary {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      color: var(--accent);
+      cursor: pointer;
+      list-style: none;
+      width: fit-content;
+    }
+    .subscribe summary::-webkit-details-marker { display: none; }
+    .subscribe summary:hover { color: var(--accent-hover); }
+    .subscribe[open] summary { color: var(--faint); }
   </style>
 </head>
 <body>
@@ -159,12 +175,13 @@
 
   <hr>
 
-  <div style="margin-bottom:0.6rem;">
+  <details class="subscribe">
+    <summary>subscribe →</summary>
     <form id="subscribe-form"
           action="https://buttondown.com/api/emails/embed-subscribe/DominicMascetti"
           method="post"
           target="bd_hidden_iframe"
-          style="display:flex; gap:0.6rem; align-items:center;"
+          style="display:flex; gap:0.6rem; align-items:center; margin-top:0.6rem;"
           onsubmit="document.getElementById('subscribe-msg').textContent='thanks — check your inbox to confirm.'; var f=this; setTimeout(function(){ f.reset(); }, 0);">
       <input type="email" name="email" required placeholder="you@example.com"
              style="flex:1; min-width:0; font-family:'EB Garamond', Georgia, serif; font-size:0.95rem; padding:0.1rem 0; border:none; border-bottom:1px solid var(--rule); background:transparent; color:var(--ink); outline:none;" />
@@ -175,7 +192,7 @@
       </button>
     </form>
     <div id="subscribe-msg" style="font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--faint); margin-top:0.3rem;"></div>
-  </div>
+  </details>
   <iframe name="bd_hidden_iframe" style="display:none;" title="subscribe"></iframe>
 
 </div>
