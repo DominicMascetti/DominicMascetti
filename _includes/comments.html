@@ -45,14 +45,15 @@
   .comment-reply {
     font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
+    letter-spacing: 0.04em;
     background: none;
     border: none;
-    color: var(--faint);
+    color: var(--accent);
     cursor: pointer;
     padding: 0;
     margin-left: 0.6rem;
   }
-  .comment-reply:hover { color: var(--accent); }
+  .comment-reply:hover { color: var(--accent-hover); text-decoration: underline; }
   .comment-replies {
     list-style: none;
     margin: 0.9rem 0 0 0.2rem;
@@ -214,7 +215,7 @@
     var reply = document.createElement('button');
     reply.type = 'button';
     reply.className = 'comment-reply';
-    reply.textContent = 'reply';
+    reply.textContent = 'reply →';
     reply.addEventListener('click', function () {
       var open = section.querySelector('.comment .comment-form');
       if (open) {
