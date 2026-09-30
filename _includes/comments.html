@@ -42,6 +42,26 @@
   }
   .comment-author { color: var(--accent); margin-right: 0.6rem; }
   .comment-body { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .comment-reply {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    background: none;
+    border: none;
+    color: var(--faint);
+    cursor: pointer;
+    padding: 0;
+    margin-left: 0.6rem;
+  }
+  .comment-reply:hover { color: var(--accent); }
+  .comment-replies {
+    list-style: none;
+    margin: 0.9rem 0 0 0.2rem;
+    padding-left: 1rem;
+    border-left: 1px solid var(--rule);
+  }
+  .comment-replies:empty { display: none; }
+  .comment-replies .comment { margin-bottom: 0.9rem; }
+  .comment .comment-form { margin-top: 0.6rem; }
   .comments-status {
     font-style: italic;
     color: var(--muted);
@@ -109,10 +129,7 @@
   var post = section.getAttribute('data-post');
   var list = section.querySelector('.comment-list');
   var status = section.querySelector('.comments-status');
-  var form = section.querySelector('.comment-form');
-  var msg = section.querySelector('.comment-msg');
-  var button = form.querySelector('button');
-  var textarea = form.elements.body;
+  var mainForm = section.querySelector('.comment-form');
   var headers = { apikey: SUPABASE_KEY };
   var approved = [];
 
@@ -158,7 +175,7 @@
     var cutoff = Date.now() - PENDING_MAX_AGE_MS;
     var pending = readPending().filter(function (p) {
       return new Date(p.created_at).getTime() > cutoff && !approved.some(function (c) {
-        return c.name === p.name && c.body === p.body;
+        return c.name === p.name && c.body === p.body && c.parent_id == p.parent_id;
       });
     });
     writePending(pending);
@@ -171,36 +188,83 @@
     return pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + '-' + d.getFullYear();
   }
 
+  function renderComment(c) {
+    var li = document.createElement('li');
+    li.className = 'comment';
+
+    var meta = document.createElement('div');
+    meta.className = 'comment-meta';
+    var author = document.createElement('span');
+    author.className = 'comment-author';
+    author.textContent = c.name;
+    var date = document.createElement('span');
+    date.textContent = formatDate(c.created_at);
+    meta.append(author, date);
+
+    var body = document.createElement('p');
+    body.className = 'comment-body';
+    body.textContent = c.body;
+
+    li.append(meta, body);
+    return li;
+  }
+
+  // Replies are one level deep: replying to a reply joins the same thread.
+  function addReplyButton(li, threadId) {
+    var reply = document.createElement('button');
+    reply.type = 'button';
+    reply.className = 'comment-reply';
+    reply.textContent = 'reply';
+    reply.addEventListener('click', function () {
+      var open = section.querySelector('.comment .comment-form');
+      if (open) {
+        var sameSpot = open.parentNode === li;
+        open.remove();
+        if (sameSpot) return;
+      }
+      var form = mainForm.cloneNode(true);
+      form.reset();
+      form.classList.remove('open');
+      form.querySelector('.comment-msg').textContent = '';
+      form.elements.body.placeholder = 'reply…';
+      form.querySelector('button').textContent = 'post reply →';
+      setupForm(form, threadId);
+      li.append(form);
+      form.elements.body.focus();
+    });
+    li.querySelector('.comment-meta').append(reply);
+  }
+
   function render() {
     var comments = approved.concat(stillPending()).sort(function (a, b) {
       return new Date(a.created_at) - new Date(b.created_at);
     });
+    var threads = {};
     list.replaceChildren();
     comments.forEach(function (c) {
-      var li = document.createElement('li');
-      li.className = 'comment';
-
-      var meta = document.createElement('div');
-      meta.className = 'comment-meta';
-      var author = document.createElement('span');
-      author.className = 'comment-author';
-      author.textContent = c.name;
-      var date = document.createElement('span');
-      date.textContent = formatDate(c.created_at);
-      meta.append(author, date);
-
-      var body = document.createElement('p');
-      body.className = 'comment-body';
-      body.textContent = c.body;
-
-      li.append(meta, body);
+      if (c.parent_id) return;
+      var li = renderComment(c);
+      if (c.id) {
+        var replies = document.createElement('ol');
+        replies.className = 'comment-replies';
+        li.append(replies);
+        threads[c.id] = replies;
+        addReplyButton(li, c.id);
+      }
       list.append(li);
+    });
+    comments.forEach(function (c) {
+      var replies = c.parent_id && threads[c.parent_id];
+      if (!replies) return;
+      var li = renderComment(c);
+      if (c.id) addReplyButton(li, c.parent_id);
+      replies.append(li);
     });
     status.textContent = '';
   }
 
   function load() {
-    var query = 'select=id,name,body,created_at&order=created_at.asc&post=eq.' + encodeURIComponent(post);
+    var query = 'select=id,parent_id,name,body,created_at&order=created_at.asc&post=eq.' + encodeURIComponent(post);
     var comments = fetch(SUPABASE_URL + '/rest/v1/comments?' + query, { headers: headers })
       .then(function (res) {
         if (!res.ok) throw new Error(res.status);
@@ -214,50 +278,64 @@
       });
   }
 
-  // Grow the box with its contents instead of showing a resize handle.
-  function fit() {
-    textarea.style.height = 'auto';
-    textarea.style.height = textarea.scrollHeight + 'px';
-  }
+  // Wires up the top-level form, or a reply form cloned from it.
+  function setupForm(form, parentId) {
+    var msg = form.querySelector('.comment-msg');
+    var button = form.querySelector('button');
+    var textarea = form.elements.body;
 
-  function collapse() {
-    form.reset();
-    form.classList.remove('open');
-    fit();
-  }
+    // Grow the box with its contents instead of showing a resize handle.
+    function fit() {
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    }
 
-  textarea.addEventListener('focus', function () { form.classList.add('open'); });
-  textarea.addEventListener('input', fit);
+    function collapse() {
+      form.reset();
+      if (parentId) { form.remove(); return; }
+      form.classList.remove('open');
+      fit();
+    }
 
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    var name = form.elements.name.value.trim();
-    var body = form.elements.body.value.trim();
-    if (!name || !body) { msg.textContent = 'name and comment, please.'; return; }
+    textarea.addEventListener('focus', function () { form.classList.add('open'); });
+    textarea.addEventListener('input', fit);
 
-    // Bots fill the honeypot; act like it worked and send nothing.
-    if (form.elements.website.value) { collapse(); return; }
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var name = form.elements.name.value.trim();
+      var body = form.elements.body.value.trim();
+      if (!name || !body) { msg.textContent = 'name and comment, please.'; return; }
 
-    var token = crypto.randomUUID();
-    button.disabled = true;
-    msg.textContent = 'posting…';
-    fetch(SUPABASE_URL + '/rest/v1/comments', {
-      method: 'POST',
-      headers: Object.assign({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }, headers),
-      body: JSON.stringify({ post: post, name: name, body: body, client_token: token })
-    })
-      .then(function (res) {
-        if (!res.ok) throw new Error(res.status);
-        writePending(readPending().concat({ token: token, name: name, body: body, created_at: new Date().toISOString() }));
-        collapse();
-        msg.textContent = '';
-        render();
-        setTimeout(load, RELOAD_DELAY_MS);
+      // Bots fill the honeypot; act like it worked and send nothing.
+      if (form.elements.website.value) { collapse(); return; }
+
+      var token = crypto.randomUUID();
+      var comment = { post: post, name: name, body: body, client_token: token };
+      if (parentId) comment.parent_id = parentId;
+      button.disabled = true;
+      msg.textContent = 'posting…';
+      fetch(SUPABASE_URL + '/rest/v1/comments', {
+        method: 'POST',
+        headers: Object.assign({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }, headers),
+        body: JSON.stringify(comment)
       })
-      .catch(function () { msg.textContent = "couldn't post that — try again?"; })
-      .then(function () { button.disabled = false; });
-  });
+        .then(function (res) {
+          if (!res.ok) throw new Error(res.status);
+          writePending(readPending().concat({
+            token: token, parent_id: parentId || null, name: name, body: body,
+            created_at: new Date().toISOString()
+          }));
+          collapse();
+          msg.textContent = '';
+          render();
+          setTimeout(load, RELOAD_DELAY_MS);
+        })
+        .catch(function () { msg.textContent = "couldn't post that — try again?"; })
+        .then(function () { button.disabled = false; });
+    });
+  }
 
+  setupForm(mainForm, null);
   load();
 })();
 </script>
