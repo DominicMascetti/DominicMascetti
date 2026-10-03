@@ -1,0 +1,453 @@
+---
+permalink: /open-research/
+title: open research
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Unlisted: nothing on the site links here, and search engines are asked to stay out. -->
+  <meta name="robots" content="noindex, nofollow" />
+  <title>{{ page.title }} — Dominic</title>
+  <meta name="theme-color" content="#5c0000" />
+
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent:       #5c0000;
+      --accent-hover: #7a0000;
+      --bg:           #f5f0e8;
+      --ink:          #1a1a18;
+      --muted:        #5a5a56;
+      --faint:        #8a8a84;
+      --rule:         #ddd8cc;
+    }
+
+    body {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 18px;
+      line-height: 1.65;
+      color: var(--ink);
+      background: var(--bg);
+      border-top: 4px solid var(--accent);
+    }
+
+    .wrap {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 5rem;
+    }
+
+    a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+    a:hover { color: var(--accent-hover); }
+
+    /* ── BACK LINK ───────────────────────────────────────────── */
+
+    .back {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      margin-bottom: 2.5rem;
+      display: block;
+      text-decoration: none;
+      color: var(--faint);
+    }
+
+    .back:hover { color: var(--accent); }
+
+    /* ── HEADER ──────────────────────────────────────────────── */
+
+    .post-header { margin-bottom: 1.5rem; }
+
+    .post-header h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      line-height: 1.2;
+      margin-bottom: 0.3rem;
+    }
+
+    .post-description {
+      color: var(--muted);
+      font-style: italic;
+      margin-top: 0.4rem;
+      font-size: 1rem;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--rule);
+      margin: 1.5rem 0;
+    }
+
+    /* ── SUBMIT FORM ─────────────────────────────────────────── */
+
+    .submit summary {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      color: var(--accent);
+      cursor: pointer;
+      list-style: none;
+      width: fit-content;
+    }
+    .submit summary::-webkit-details-marker { display: none; }
+    .submit summary:hover { color: var(--accent-hover); }
+    .submit[open] summary { color: var(--faint); }
+
+    .research-form { margin-top: 0.6rem; }
+    .research-form input,
+    .research-form textarea {
+      display: block;
+      width: 100%;
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: var(--ink);
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--rule);
+      border-radius: 0;
+      padding: 0.1rem 0;
+      margin-top: 0.8rem;
+      outline: none;
+      resize: none;
+      overflow: hidden;
+    }
+    .research-form input:focus,
+    .research-form textarea:focus { border-bottom-color: var(--accent); }
+    .research-form input[name="name"] { max-width: 16rem; }
+    .research-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+    .research-actions {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      margin-top: 0.9rem;
+    }
+    .research-msg {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--faint);
+    }
+    .research-form button {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      background: none;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      padding: 0;
+      white-space: nowrap;
+    }
+    .research-form button:hover { color: var(--accent-hover); }
+    .research-form button:disabled { color: var(--faint); cursor: default; }
+
+    /* ── POSTS ───────────────────────────────────────────────── */
+
+    .research-list { list-style: none; }
+    .research-post { margin-bottom: 2rem; }
+    .research-post:last-child { margin-bottom: 0; }
+    .research-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      line-height: 1.3;
+      overflow-wrap: anywhere;
+    }
+    .research-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--faint);
+      margin: 0.15rem 0 0.4rem;
+    }
+    .research-author { color: var(--accent); margin-right: 0.6rem; }
+    .research-pending { font-style: italic; margin-left: 0.6rem; }
+    .research-body { white-space: pre-wrap; overflow-wrap: anywhere; }
+    .research-body.clamped {
+      display: -webkit-box;
+      -webkit-line-clamp: 8;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .research-more {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      background: none;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      padding: 0;
+      margin-top: 0.3rem;
+    }
+    .research-more:hover { color: var(--accent-hover); text-decoration: underline; }
+    .research-status {
+      font-style: italic;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+    .research-status:empty { display: none; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <a class="back" href="https://dominicmascetti.com/">← home</a>
+
+  <div class="post-header">
+    <h1>open research</h1>
+    <p class="post-description">
+      An unlisted place for AI safety research worth reading. Anyone can submit,
+      but every submission is moderated, and low-effort or AI-generated filler
+      won't make it on.
+    </p>
+  </div>
+
+  <details class="submit">
+    <summary>submit research →</summary>
+    <form class="research-form" novalidate>
+      <input type="text" name="title" required maxlength="200" placeholder="title" aria-label="Title" />
+      <input type="url" name="link" maxlength="500" placeholder="link (optional)" aria-label="Link" />
+      <textarea name="body" required maxlength="20000" rows="4" placeholder="summary or full text…" aria-label="Summary or full text"></textarea>
+      <input type="text" name="name" required maxlength="60" placeholder="name" autocomplete="name" aria-label="Name" />
+      <!-- Honeypot: hidden from people, tempting to bots. -->
+      <div class="research-hp" aria-hidden="true">
+        <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off" /></label>
+      </div>
+      <div class="research-actions">
+        <button type="submit">submit →</button>
+        <span class="research-msg" role="status"></span>
+      </div>
+    </form>
+  </details>
+
+  <hr>
+
+  <ol class="research-list" aria-live="polite"></ol>
+  <p class="research-status">loading…</p>
+
+</div>
+
+<script>
+(function () {
+  var SUPABASE_URL = {{ site.supabase_url | jsonify }};
+  var SUPABASE_KEY = {{ site.supabase_key | jsonify }};
+  var RELOAD_DELAY_MS = 2500;
+  var PENDING_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+
+  var list = document.querySelector('.research-list');
+  var status = document.querySelector('.research-status');
+  var form = document.querySelector('.research-form');
+  var details = document.querySelector('.submit');
+  var msg = form.querySelector('.research-msg');
+  var button = form.querySelector('button');
+  var textarea = form.elements.body;
+  var headers = { apikey: SUPABASE_KEY };
+  var approved = [];
+
+  // The visitor's own submissions that aren't approved yet, kept in their
+  // browser so they show up for them straight away (and only for them).
+  var pendingKey = 'pending-research';
+
+  function readPending() {
+    try { return JSON.parse(localStorage.getItem(pendingKey)) || []; } catch (e) { return []; }
+  }
+
+  function writePending(pending) {
+    try {
+      if (pending.length) localStorage.setItem(pendingKey, JSON.stringify(pending));
+      else localStorage.removeItem(pendingKey);
+    } catch (e) { /* storage unavailable; the post just won't persist locally */ }
+  }
+
+  // Ask what happened to our pending posts and forget any that were rejected
+  // or deleted. Only the holder of a token can ask about it.
+  function checkPending() {
+    var tokens = readPending().map(function (p) { return p.token; }).filter(Boolean);
+    if (!tokens.length) return Promise.resolve();
+    return fetch(SUPABASE_URL + '/rest/v1/rpc/research_post_status', {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, headers),
+      body: JSON.stringify({ tokens: tokens })
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error(res.status);
+        return res.json();
+      })
+      .then(function (rows) {
+        var removed = rows.filter(function (r) { return r.status === 'removed'; })
+                          .map(function (r) { return r.token; });
+        writePending(readPending().filter(function (p) { return removed.indexOf(p.token) === -1; }));
+      })
+      .catch(function () { /* keep showing them; try again next load */ });
+  }
+
+  // Drop pending posts that are now approved (or too old to be worth showing).
+  function stillPending() {
+    var cutoff = Date.now() - PENDING_MAX_AGE_MS;
+    var pending = readPending().filter(function (p) {
+      return new Date(p.created_at).getTime() > cutoff && !approved.some(function (r) {
+        return r.name === p.name && r.title === p.title && r.body === p.body;
+      });
+    });
+    writePending(pending);
+    return pending;
+  }
+
+  function formatDate(iso) {
+    var d = new Date(iso);
+    function pad(n) { return String(n).padStart(2, '0'); }
+    return pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + '-' + d.getFullYear();
+  }
+
+  function safeLink(link) {
+    if (!link) return null;
+    try {
+      var url = new URL(link);
+      return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : null;
+    } catch (e) { return null; }
+  }
+
+  function renderPost(r) {
+    var li = document.createElement('li');
+    li.className = 'research-post';
+
+    var title = document.createElement('h2');
+    title.className = 'research-title';
+    var href = safeLink(r.link);
+    if (href) {
+      var a = document.createElement('a');
+      a.href = href;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer nofollow ugc';
+      a.textContent = r.title;
+      title.append(a);
+    } else {
+      title.textContent = r.title;
+    }
+
+    var meta = document.createElement('div');
+    meta.className = 'research-meta';
+    var author = document.createElement('span');
+    author.className = 'research-author';
+    author.textContent = r.name;
+    var date = document.createElement('span');
+    date.textContent = formatDate(r.created_at);
+    meta.append(author, date);
+    if (!r.id) {
+      var pending = document.createElement('span');
+      pending.className = 'research-pending';
+      pending.textContent = 'awaiting moderation — only you can see this';
+      meta.append(pending);
+    }
+
+    var body = document.createElement('p');
+    body.className = 'research-body clamped';
+    body.textContent = r.body;
+
+    li.append(title, meta, body);
+    return li;
+  }
+
+  // Bodies are clamped by CSS; offer a toggle only where something is hidden.
+  function addMoreToggles() {
+    list.querySelectorAll('.research-body').forEach(function (body) {
+      if (body.scrollHeight <= body.clientHeight + 1) {
+        body.classList.remove('clamped');
+        return;
+      }
+      var more = document.createElement('button');
+      more.type = 'button';
+      more.className = 'research-more';
+      more.textContent = 'more ↓';
+      more.addEventListener('click', function () {
+        var clamped = body.classList.toggle('clamped');
+        more.textContent = clamped ? 'more ↓' : 'less ↑';
+      });
+      body.after(more);
+    });
+  }
+
+  function render() {
+    var posts = approved.concat(stillPending()).sort(function (a, b) {
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+    list.replaceChildren.apply(list, posts.map(renderPost));
+    addMoreToggles();
+    status.textContent = posts.length ? '' : 'nothing here yet.';
+  }
+
+  function load() {
+    var query = 'select=id,title,link,name,body,created_at&order=created_at.desc';
+    var posts = fetch(SUPABASE_URL + '/rest/v1/research_posts?' + query, { headers: headers })
+      .then(function (res) {
+        if (!res.ok) throw new Error(res.status);
+        return res.json();
+      });
+    return Promise.all([posts, checkPending()])
+      .then(function (results) { approved = results[0]; render(); })
+      .catch(function () {
+        render();
+        if (!list.children.length) status.textContent = "couldn't load posts.";
+      });
+  }
+
+  // Grow the box with its contents instead of showing a resize handle.
+  function fit() {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+  }
+  textarea.addEventListener('input', fit);
+
+  function collapse() {
+    form.reset();
+    fit();
+    details.open = false;
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var title = form.elements.title.value.trim();
+    var link = form.elements.link.value.trim();
+    var body = form.elements.body.value.trim();
+    var name = form.elements.name.value.trim();
+    if (!title || !body || !name) { msg.textContent = 'title, text, and name, please.'; return; }
+    if (link && (!safeLink(link) || link.length > 500)) {
+      msg.textContent = 'links need to start with http:// or https://.';
+      return;
+    }
+
+    // Bots fill the honeypot; act like it worked and send nothing.
+    if (form.elements.website.value) { collapse(); return; }
+
+    var token = crypto.randomUUID();
+    var post = { title: title, link: link || null, body: body, name: name, client_token: token };
+    button.disabled = true;
+    msg.textContent = 'submitting…';
+    fetch(SUPABASE_URL + '/rest/v1/research_posts', {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }, headers),
+      body: JSON.stringify(post)
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error(res.status);
+        writePending(readPending().concat({
+          token: token, title: title, link: link || null, name: name, body: body,
+          created_at: new Date().toISOString()
+        }));
+        collapse();
+        msg.textContent = '';
+        render();
+        setTimeout(load, RELOAD_DELAY_MS);
+      })
+      .catch(function () { msg.textContent = "couldn't submit that — try again?"; })
+      .then(function () { button.disabled = false; });
+  });
+
+  load();
+})();
+</script>
+</body>
+</html>
