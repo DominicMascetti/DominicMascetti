@@ -1,0 +1,294 @@
+---
+permalink: /research-labels/
+title: research labels
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Unlisted labelling tool: nothing on the site links here. -->
+  <meta name="robots" content="noindex, nofollow" />
+  <title>{{ page.title }} — Dominic</title>
+  <meta name="theme-color" content="#5c0000" />
+
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent:       #5c0000;
+      --accent-hover: #7a0000;
+      --bg:           #f5f0e8;
+      --ink:          #1a1a18;
+      --muted:        #5a5a56;
+      --faint:        #8a8a84;
+      --rule:         #ddd8cc;
+    }
+
+    body {
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 18px;
+      line-height: 1.65;
+      color: var(--ink);
+      background: var(--bg);
+      border-top: 4px solid var(--accent);
+    }
+
+    .wrap {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 5rem;
+    }
+
+    a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+    a:hover { color: var(--accent-hover); }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      color: var(--faint);
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      line-height: 1.2;
+      margin-bottom: 0.3rem;
+    }
+
+    .description {
+      color: var(--muted);
+      font-style: italic;
+      margin-top: 0.4rem;
+      font-size: 1rem;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--rule);
+      margin: 1.5rem 0;
+    }
+
+    .progress { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .bar { height: 2px; background: var(--rule); margin-top: 0.4rem; }
+    .bar-fill { height: 100%; background: var(--accent); width: 0; }
+
+    .item { min-height: 18rem; }
+    .item-meta { margin-bottom: 0.3rem; }
+    .item-source { color: var(--accent); margin-right: 0.6rem; }
+    .item-title { font-size: 1.3rem; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+    .item-excerpt { margin-top: 0.6rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+    .choices { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 1.5rem; }
+    button {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      background: none;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      padding: 0;
+      white-space: nowrap;
+    }
+    button:hover { color: var(--accent-hover); text-decoration: underline; }
+    button.chosen { color: var(--ink); text-decoration: underline; text-decoration-thickness: 2px; }
+    .nav { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 1rem; }
+    .nav button { color: var(--faint); }
+
+    textarea {
+      display: block;
+      width: 100%;
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: var(--ink);
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--rule);
+      padding: 0.1rem 0;
+      margin-top: 1rem;
+      outline: none;
+      resize: none;
+    }
+    textarea:focus { border-bottom-color: var(--accent); }
+
+    .rubric { font-size: 1rem; color: var(--muted); }
+    .rubric b { color: var(--ink); font-weight: 600; }
+    .rubric p { margin-bottom: 0.4rem; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>research labels</h1>
+  <p class="description">
+    Label each item as if deciding whether it belongs on the open research page.
+    Jev will be scored against these labels, so go with your gut. Labels are saved
+    in this browser; press export when you're done (or whenever).
+  </p>
+
+  <hr>
+
+  <div class="rubric">
+    <p><b>publish</b>: substantive AI safety research or analysis you'd want a reader to find: concrete claims, methods, results, or a careful argument.</p>
+    <p><b>skip</b>: off-topic, thin, news or announcements, opinion without substance, or slop.</p>
+    <p><b>unsure</b>: genuinely borderline. Use sparingly.</p>
+    <p class="mono">keys: p publish · s skip · u unsure · ← → move · n next unlabelled · open the link if the excerpt isn't enough</p>
+  </div>
+
+  <hr>
+
+  <div class="progress mono">
+    <span class="count"></span>
+    <span class="tally"></span>
+  </div>
+  <div class="bar"><div class="bar-fill"></div></div>
+
+  <hr>
+
+  <div class="item">
+    <div class="item-meta mono"><span class="item-source"></span><span class="item-date"></span> · <span class="item-words"></span></div>
+    <h2 class="item-title"><a target="_blank" rel="noopener noreferrer nofollow"></a></h2>
+    <p class="item-excerpt"></p>
+  </div>
+
+  <div class="choices">
+    <button type="button" data-label="publish">publish (p)</button>
+    <button type="button" data-label="skip">skip (s)</button>
+    <button type="button" data-label="unsure">unsure (u)</button>
+  </div>
+  <textarea rows="1" placeholder="optional note (why?)" aria-label="Note"></textarea>
+
+  <div class="nav">
+    <button type="button" class="prev">← prev</button>
+    <button type="button" class="next">next →</button>
+    <button type="button" class="next-open">next unlabelled</button>
+    <button type="button" class="export">export labels ↓</button>
+  </div>
+  <p class="mono status" role="status" style="margin-top:0.8rem"></p>
+
+</div>
+
+<script>
+(function () {
+  var KEY = 'research-labels-v1';
+  var items = [];
+  var labels = load();
+  var index = 0;
+
+  var el = function (s) { return document.querySelector(s); };
+  var note = el('textarea');
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; }
+  }
+
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(labels)); }
+    catch (e) { el('.status').textContent = "couldn't save in this browser — export often."; }
+  }
+
+  function firstOpen(from) {
+    for (var k = 0; k < items.length; k++) {
+      var j = (from + k) % items.length;
+      if (!labels[items[j].id] || !labels[items[j].id].label) return j;
+    }
+    return -1;
+  }
+
+  function render() {
+    var it = items[index];
+    var lab = labels[it.id] || {};
+    el('.item-source').textContent = it.source;
+    el('.item-date').textContent = it.date;
+    el('.item-words').textContent = it.words + ' words';
+    var a = el('.item-title a');
+    a.href = it.url;
+    a.textContent = it.title;
+    el('.item-excerpt').textContent = it.excerpt;
+    note.value = lab.note || '';
+    document.querySelectorAll('.choices button').forEach(function (b) {
+      b.classList.toggle('chosen', b.getAttribute('data-label') === lab.label);
+    });
+
+    var done = items.filter(function (i) { return labels[i.id] && labels[i.id].label; }).length;
+    var tally = { publish: 0, skip: 0, unsure: 0 };
+    Object.keys(labels).forEach(function (id) { if (labels[id].label) tally[labels[id].label]++; });
+    el('.count').textContent = 'item ' + (index + 1) + ' of ' + items.length + ' · ' + done + ' labelled';
+    el('.tally').textContent = tally.publish + ' publish · ' + tally.skip + ' skip · ' + tally.unsure + ' unsure';
+    el('.bar-fill').style.width = (100 * done / items.length) + '%';
+  }
+
+  function go(i) {
+    index = (i + items.length) % items.length;
+    el('.status').textContent = '';
+    render();
+    window.scrollTo(0, 0);
+  }
+
+  function choose(label) {
+    var id = items[index].id;
+    labels[id] = Object.assign({}, labels[id], { label: label, at: new Date().toISOString() });
+    save();
+    var next = firstOpen(index + 1);
+    if (next === -1) { render(); el('.status').textContent = 'all labelled — press export.'; }
+    else go(next);
+  }
+
+  function exportLabels() {
+    var out = items.map(function (i) {
+      var l = labels[i.id] || {};
+      return { id: i.id, url: i.url, label: l.label || null, note: l.note || '' };
+    });
+    var blob = new Blob([JSON.stringify(out, null, 1)], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'research-labels.json';
+    document.body.append(a);
+    a.click();
+    a.remove();
+    el('.status').textContent = 'exported research-labels.json';
+  }
+
+  note.addEventListener('input', function () {
+    var id = items[index].id;
+    labels[id] = Object.assign({}, labels[id], { note: note.value });
+    save();
+  });
+
+  document.querySelectorAll('.choices button').forEach(function (b) {
+    b.addEventListener('click', function () { choose(b.getAttribute('data-label')); });
+  });
+  el('.prev').addEventListener('click', function () { go(index - 1); });
+  el('.next').addEventListener('click', function () { go(index + 1); });
+  el('.next-open').addEventListener('click', function () {
+    var j = firstOpen(index + 1);
+    if (j === -1) el('.status').textContent = 'all labelled — press export.'; else go(j);
+  });
+  el('.export').addEventListener('click', exportLabels);
+
+  document.addEventListener('keydown', function (e) {
+    if (e.target === note || e.metaKey || e.ctrlKey || e.altKey) return;
+    var keys = { p: 'publish', s: 'skip', u: 'unsure' };
+    if (keys[e.key]) { e.preventDefault(); choose(keys[e.key]); }
+    else if (e.key === 'ArrowLeft') go(index - 1);
+    else if (e.key === 'ArrowRight') go(index + 1);
+    else if (e.key === 'n') el('.next-open').click();
+  });
+
+  fetch('/assets/research-labels.json')
+    .then(function (res) { if (!res.ok) throw new Error(res.status); return res.json(); })
+    .then(function (data) {
+      items = data;
+      var j = firstOpen(0);
+      go(j === -1 ? 0 : j);
+    })
+    .catch(function () { el('.status').textContent = "couldn't load the items."; });
+})();
+</script>
+</body>
+</html>
