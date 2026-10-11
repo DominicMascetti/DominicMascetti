@@ -1,0 +1,20 @@
+---
+layout: default
+title: writing
+permalink: /blog/
+---
+{% assign years = site.posts | group_by_exp: "post", "post.date | date: '%Y'" %}
+{% for year in years %}
+<section class="year">
+  <h2 class="section-label"><time>{{ year.name }}</time></h2>
+  <ul class="post-list">
+    {% for post in year.items %}
+      {% include post-row.html post=post %}
+    {% endfor %}
+  </ul>
+</section>
+{% endfor %}
+
+<div class="blog-subscribe">
+  {% include subscribe.html %}
+</div>

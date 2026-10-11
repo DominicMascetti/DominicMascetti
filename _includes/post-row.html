@@ -1,0 +1,6 @@
+<li class="post-row">
+  <time class="post-row-date" datetime="{{ include.post.date | date: '%Y-%m-%d' }}">{{ include.post.date | date: "%b %-d" }}</time>
+  <span class="post-row-text">
+    <a href="{{ include.post.url | relative_url }}">{{ include.post.title }}</a>{% if include.post.description %} <span class="post-row-sub">{{ include.post.description }}</span>{% endif %}
+  </span>
+</li>

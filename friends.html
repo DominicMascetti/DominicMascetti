@@ -1,0 +1,14 @@
+---
+layout: default
+title: friends
+permalink: /friends/
+---
+<h2 class="section-label">friends</h2>
+<ul class="friend-list">
+  {% for friend in site.data.friends %}
+  <li>
+    <a href="{{ friend.url }}" target="_blank">{{ friend.name }}</a>
+    <span class="blurb">{{ friend.blurb }}</span>
+  </li>
+  {% endfor %}
+</ul>
