@@ -10,7 +10,7 @@ layout: default
 <section class="section">
   <h2 class="section-label">writing</h2>
   <ul class="post-list">
-    {% for post in site.posts limit:5 %}
+    {% for post in site.posts limit:3 %}
       {% include post-row.html post=post %}
     {% endfor %}
   </ul>
