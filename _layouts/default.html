@@ -22,7 +22,9 @@
 <body>
 <div class="wrap">
 
-  {% include site-header.html %}
+  {% unless page.url == "/" or page.layout == "post" %}
+  <a class="back" href="/">← home</a>
+  {% endunless %}
 
   <main>
     {{ content }}

@@ -31,24 +31,6 @@ a:hover { color: var(--accent-hover); }
 
 time, .oldstyle { font-variant-numeric: oldstyle-nums; }
 
-/* ── SITE HEADER ─────────────────────────────────────────── */
-
-.site-header {
-  padding-bottom: 18px;
-  border-bottom: 1px solid var(--hairline);
-  margin-bottom: 2.25rem;
-}
-
-.site-name {
-  font-size: 34px;
-  font-weight: 500;
-  line-height: 1.15;
-  color: var(--hairline);
-  text-decoration: none;
-}
-
-.site-name:hover { color: var(--accent); }
-
 /* ── SECTIONS ────────────────────────────────────────────── */
 
 .section { margin-top: 2.5rem; }
@@ -243,7 +225,6 @@ hr {
 
 @media (max-width: 520px) {
   .wrap { padding: 1.75rem 16px 4rem; }
-  .site-name { font-size: 28px; }
   .post-row { grid-template-columns: 3.4rem 1fr; gap: 0.6rem; }
   .friend-list li { grid-template-columns: 1fr; gap: 0.1rem; }
 }
