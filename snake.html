@@ -1,0 +1,93 @@
+---
+layout: default
+title: snake
+permalink: /snake/
+---
+<h2 class="section-label">snake</h2>
+<p>score: <span id="score">0</span></p>
+<canvas id="board" width="400" height="400" style="width:100%;max-width:400px;border:1px solid var(--rule);touch-action:none;"></canvas>
+<p style="color:var(--muted)">Arrow keys or swipe to move. Space or tap to restart.</p>
+
+<script>
+(function () {
+  var N = 20, S = 20;
+  var canvas = document.getElementById('board');
+  var ctx = canvas.getContext('2d');
+  var scoreEl = document.getElementById('score');
+  var snake, dir, next, food, dead;
+
+  function reset() {
+    snake = [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }];
+    dir = next = { x: 1, y: 0 };
+    dead = false;
+    scoreEl.textContent = 0;
+    placeFood();
+  }
+
+  function placeFood() {
+    do {
+      food = { x: Math.floor(Math.random() * N), y: Math.floor(Math.random() * N) };
+    } while (snake.some(function (p) { return p.x === food.x && p.y === food.y; }));
+  }
+
+  function turn(x, y) {
+    if (dir.x === -x && dir.y === -y) return;
+    next = { x: x, y: y };
+  }
+
+  function step() {
+    if (dead) return;
+    dir = next;
+    var head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+    if (head.x < 0 || head.y < 0 || head.x >= N || head.y >= N ||
+        snake.some(function (p) { return p.x === head.x && p.y === head.y; })) {
+      dead = true;
+      return draw();
+    }
+    snake.unshift(head);
+    if (head.x === food.x && head.y === food.y) {
+      scoreEl.textContent = snake.length - 3;
+      placeFood();
+    } else {
+      snake.pop();
+    }
+    draw();
+  }
+
+  function draw() {
+    ctx.fillStyle = '#f5f0e8';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#5c0000';
+    ctx.fillRect(food.x * S, food.y * S, S, S);
+    ctx.fillStyle = '#1a1a18';
+    snake.forEach(function (p) { ctx.fillRect(p.x * S + 1, p.y * S + 1, S - 2, S - 2); });
+    if (dead) {
+      ctx.fillStyle = '#5c0000';
+      ctx.font = '28px "EB Garamond", Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('game over', canvas.width / 2, canvas.height / 2);
+    }
+  }
+
+  document.addEventListener('keydown', function (e) {
+    var k = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] }[e.key];
+    if (k) { e.preventDefault(); turn(k[0], k[1]); }
+    if (e.key === ' ') { e.preventDefault(); if (dead) reset(); }
+  });
+
+  var tx, ty;
+  canvas.addEventListener('touchstart', function (e) {
+    tx = e.touches[0].clientX; ty = e.touches[0].clientY;
+  });
+  canvas.addEventListener('touchend', function (e) {
+    var dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) < 20 && Math.abs(dy) < 20) { if (dead) reset(); return; }
+    if (Math.abs(dx) > Math.abs(dy)) turn(dx > 0 ? 1 : -1, 0);
+    else turn(0, dy > 0 ? 1 : -1);
+  });
+
+  reset();
+  draw();
+  setInterval(step, 110);
+})();
+</script>
