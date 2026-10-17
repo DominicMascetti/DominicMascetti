@@ -3,111 +3,33 @@ layout: default
 title: snake
 permalink: /snake/
 ---
+<link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet" />
+
 <h2 class="section-label">snake</h2>
-<p>score: <span id="score">0</span></p>
-<canvas id="board" width="400" height="400" style="width:100%;max-width:400px;border:1px solid var(--rule);touch-action:none;"></canvas>
-<p style="color:var(--muted)">Arrow keys, WASD or swipe to move. Space or tap to start and restart.</p>
 
-<script>
-(function () {
-  var N = 20, S = 20;
-  var canvas = document.getElementById('board');
-  var ctx = canvas.getContext('2d');
-  var scoreEl = document.getElementById('score');
-  var snake, dir, queue, food, dead, started;
+<div class="snake">
+  <div class="snake-bar">
+    <span class="snake-modes">
+      <button type="button" data-snake-mode="classic">classic</button>
+      <button type="button" data-snake-mode="challenge">challenge</button>
+    </span>
+    <button type="button" id="snake-sound" class="snake-sound">sound: on</button>
+  </div>
+  <p id="snake-hud" class="snake-hud" aria-live="polite"></p>
+  <canvas id="snake-board" width="400" height="400" aria-label="Snake game board"></canvas>
+  <div id="snake-effects" class="snake-effects"></div>
+  <p id="snake-ticker" class="snake-ticker"></p>
+  <p class="snake-help">Arrow keys or WASD to move, space to pause. On a phone, swipe to move and tap to pause.</p>
+</div>
 
-  function reset() {
-    snake = [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }];
-    dir = { x: 1, y: 0 };
-    queue = [];
-    dead = false;
-    started = false;
-    scoreEl.textContent = 0;
-    placeFood();
-  }
+<details id="snake-guide" class="snake-guide">
+  <summary>field guide <span data-guide-count></span></summary>
+  <p class="snake-guide-note">Everything you’ve run into in challenge mode. Hit “try” to practice a challenge on its own.</p>
+  <h3>challenges</h3>
+  <ul data-guide="challenge"></ul>
+  <h3>power-ups</h3>
+  <ul data-guide="powerup"></ul>
+</details>
 
-  function placeFood() {
-    do {
-      food = { x: Math.floor(Math.random() * N), y: Math.floor(Math.random() * N) };
-    } while (snake.some(function (p) { return p.x === food.x && p.y === food.y; }));
-  }
-
-  // Queue turns so quick presses between ticks aren't lost; check each
-  // against the last queued direction so the snake can't reverse into itself.
-  function turn(x, y) {
-    if (dead) return;
-    started = true;
-    var last = queue.length ? queue[queue.length - 1] : dir;
-    if ((last.x === x && last.y === y) || (last.x === -x && last.y === -y)) return;
-    if (queue.length < 3) queue.push({ x: x, y: y });
-  }
-
-  function step() {
-    if (dead || !started) return;
-    if (queue.length) dir = queue.shift();
-    var head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
-    if (head.x < 0 || head.y < 0 || head.x >= N || head.y >= N ||
-        snake.some(function (p) { return p.x === head.x && p.y === head.y; })) {
-      dead = true;
-      return draw();
-    }
-    snake.unshift(head);
-    if (head.x === food.x && head.y === food.y) {
-      scoreEl.textContent = snake.length - 3;
-      placeFood();
-    } else {
-      snake.pop();
-    }
-    draw();
-  }
-
-  function draw() {
-    ctx.fillStyle = '#f5f0e8';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#5c0000';
-    ctx.fillRect(food.x * S, food.y * S, S, S);
-    ctx.fillStyle = '#1a1a18';
-    snake.forEach(function (p) { ctx.fillRect(p.x * S + 1, p.y * S + 1, S - 2, S - 2); });
-    if (dead) {
-      ctx.fillStyle = '#5c0000';
-      ctx.font = '28px "EB Garamond", Georgia, serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('game over', canvas.width / 2, canvas.height / 2);
-    }
-  }
-
-  document.addEventListener('keydown', function (e) {
-    var k = {
-      ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0],
-      w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0]
-    }[e.key];
-    if (k) { e.preventDefault(); turn(k[0], k[1]); }
-    if (e.key === ' ') { e.preventDefault(); if (dead) { reset(); draw(); } else started = true; }
-  });
-
-  // Turn as soon as a swipe passes the threshold, then measure the next
-  // swipe from there, so one continuous drag can make several turns.
-  var tx, ty, moved;
-  canvas.addEventListener('touchstart', function (e) {
-    e.preventDefault();
-    tx = e.touches[0].clientX; ty = e.touches[0].clientY; moved = false;
-  }, { passive: false });
-  canvas.addEventListener('touchmove', function (e) {
-    e.preventDefault();
-    var x = e.touches[0].clientX, y = e.touches[0].clientY;
-    var dx = x - tx, dy = y - ty;
-    if (Math.abs(dx) < 15 && Math.abs(dy) < 15) return;
-    if (Math.abs(dx) > Math.abs(dy)) turn(dx > 0 ? 1 : -1, 0);
-    else turn(0, dy > 0 ? 1 : -1);
-    tx = x; ty = y; moved = true;
-  }, { passive: false });
-  canvas.addEventListener('touchend', function () {
-    if (moved) return;
-    if (dead) { reset(); draw(); } else started = true;
-  });
-
-  reset();
-  draw();
-  setInterval(step, 110);
-})();
-</script>
+<script src="{{ '/assets/js/snake-mods.js' | relative_url }}"></script>
+<script src="{{ '/assets/js/snake.js' | relative_url }}"></script>
