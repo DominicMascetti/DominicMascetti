@@ -6,7 +6,7 @@ permalink: /snake/
 <h2 class="section-label">snake</h2>
 <p>score: <span id="score">0</span></p>
 <canvas id="board" width="400" height="400" style="width:100%;max-width:400px;border:1px solid var(--rule);touch-action:none;"></canvas>
-<p style="color:var(--muted)">Arrow keys or swipe to move. Space or tap to restart.</p>
+<p style="color:var(--muted)">Arrow keys, WASD or swipe to move. Space or tap to start and restart.</p>
 
 <script>
 (function () {
@@ -14,12 +14,14 @@ permalink: /snake/
   var canvas = document.getElementById('board');
   var ctx = canvas.getContext('2d');
   var scoreEl = document.getElementById('score');
-  var snake, dir, next, food, dead;
+  var snake, dir, queue, food, dead, started;
 
   function reset() {
     snake = [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }];
-    dir = next = { x: 1, y: 0 };
+    dir = { x: 1, y: 0 };
+    queue = [];
     dead = false;
+    started = false;
     scoreEl.textContent = 0;
     placeFood();
   }
@@ -30,14 +32,19 @@ permalink: /snake/
     } while (snake.some(function (p) { return p.x === food.x && p.y === food.y; }));
   }
 
+  // Queue turns so quick presses between ticks aren't lost; check each
+  // against the last queued direction so the snake can't reverse into itself.
   function turn(x, y) {
-    if (dir.x === -x && dir.y === -y) return;
-    next = { x: x, y: y };
+    if (dead) return;
+    started = true;
+    var last = queue.length ? queue[queue.length - 1] : dir;
+    if ((last.x === x && last.y === y) || (last.x === -x && last.y === -y)) return;
+    if (queue.length < 3) queue.push({ x: x, y: y });
   }
 
   function step() {
-    if (dead) return;
-    dir = next;
+    if (dead || !started) return;
+    if (queue.length) dir = queue.shift();
     var head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
     if (head.x < 0 || head.y < 0 || head.x >= N || head.y >= N ||
         snake.some(function (p) { return p.x === head.x && p.y === head.y; })) {
@@ -70,20 +77,33 @@ permalink: /snake/
   }
 
   document.addEventListener('keydown', function (e) {
-    var k = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] }[e.key];
+    var k = {
+      ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0],
+      w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0]
+    }[e.key];
     if (k) { e.preventDefault(); turn(k[0], k[1]); }
-    if (e.key === ' ') { e.preventDefault(); if (dead) reset(); }
+    if (e.key === ' ') { e.preventDefault(); if (dead) { reset(); draw(); } else started = true; }
   });
 
-  var tx, ty;
+  // Turn as soon as a swipe passes the threshold, then measure the next
+  // swipe from there, so one continuous drag can make several turns.
+  var tx, ty, moved;
   canvas.addEventListener('touchstart', function (e) {
-    tx = e.touches[0].clientX; ty = e.touches[0].clientY;
-  });
-  canvas.addEventListener('touchend', function (e) {
-    var dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
-    if (Math.abs(dx) < 20 && Math.abs(dy) < 20) { if (dead) reset(); return; }
+    e.preventDefault();
+    tx = e.touches[0].clientX; ty = e.touches[0].clientY; moved = false;
+  }, { passive: false });
+  canvas.addEventListener('touchmove', function (e) {
+    e.preventDefault();
+    var x = e.touches[0].clientX, y = e.touches[0].clientY;
+    var dx = x - tx, dy = y - ty;
+    if (Math.abs(dx) < 15 && Math.abs(dy) < 15) return;
     if (Math.abs(dx) > Math.abs(dy)) turn(dx > 0 ? 1 : -1, 0);
     else turn(0, dy > 0 ? 1 : -1);
+    tx = x; ty = y; moved = true;
+  }, { passive: false });
+  canvas.addEventListener('touchend', function () {
+    if (moved) return;
+    if (dead) { reset(); draw(); } else started = true;
   });
 
   reset();
