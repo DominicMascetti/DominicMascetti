@@ -66,6 +66,7 @@
     thud: () => tone(140, 0.15, 'square', 0.05, 0, 50),
     zap: () => tone(1800, 0.18, 'sawtooth', 0.025, 0, 200),
     click: () => tone(900, 0.03, 'square', 0.02),
+    change: () => [784, 587, 880, 659].forEach((f, i) => tone(f, 0.1, 'triangle', 0.045, i * 0.07)),
     shield: () => tone(900, 0.3, 'triangle', 0.05, 0, 300),
     honk: () => { tone(260, 0.12, 'sawtooth', 0.04); tone(260, 0.12, 'sawtooth', 0.04, 0.16); },
   };
@@ -84,7 +85,8 @@
     snake: [], dir: { x: 1, y: 0 }, queue: [], foods: [], pickups: [],
     rocks: new Map(), hazards: [], mods: [], particles: [], toasts: [],
     levelMods: [], runSeen: new Set(), practice: null,
-    level: 1, eaten: 0, goal: Infinity, score: 0, lives: 3, tick: 0, grow: 0,
+    eaten: 0, score: 0, tick: 0, grow: 0, playMs: 0, changes: 0, nextChange: 0, changeFrom: 0,
+    pending: null, recent: [], newBest: false,
     t: 0, dt: 0, shake: 0, flash: 0, lockUntil: 0, lastEat: 0, lastTail: null,
     deathReason: '', nextPickup: 0, closeAt: 0, style: null,
     canvas, ctx, dpr: 1, PX, DIRS,
@@ -293,6 +295,7 @@
   g.die = reason => {
     if (g.state !== 'play') return;
     g.deathReason = reason;
+    g.toasts = [];
     g.shake = 12;
     g.flash = 1;
     sfx('die');
@@ -300,13 +303,12 @@
     emit('die', reason);
     if (g.mode === 'classic') {
       if (g.score > store.get('bestScore', 0)) store.set('bestScore', g.score);
-      g.state = 'over';
-    } else if (g.practice) {
-      g.state = 'dead';
-    } else {
-      g.lives--;
-      g.state = g.lives > 0 ? 'dead' : 'over';
+    } else if (!g.practice) {
+      g.newBest = g.score > store.get('bestEndless', 0);
+      if (g.newBest) store.set('bestEndless', g.score);
+      if (g.playMs > store.get('bestTime', 0)) store.set('bestTime', g.playMs);
     }
+    g.state = 'over';
     g.lockUntil = performance.now() + 650;
   };
 
@@ -345,7 +347,10 @@
     }
   };
   g.confettiAt = (x, y, n) => g.confetti(g.px(x), g.py(y), n || 24);
-  g.toast = text => { g.toasts.push({ text: T(text), born: g.t, until: g.t + 2200 }); };
+  g.toast = (text, sub, ms) => {
+    g.toasts.push({ text: T(text), sub: sub ? T(sub) : '', born: g.t, until: g.t + (ms || (sub ? 3000 : 2000)) });
+    if (g.toasts.length > 5) g.toasts.shift();
+  };
   g.comment = text => {
     if (!tickerEl) return;
     tickerEl.textContent = T(text);
@@ -414,9 +419,9 @@
 
   // A random challenge for a while (the suspicious mushroom).
   g.curse = ticks => {
-    const groups = new Set(g.mods.map(m => m.def.group).filter(Boolean));
+    const active = g.mods.map(m => m.def.id);
     const pool = CHALLENGES.filter(c => c.temp !== false && !c.size && !g.has(c.id) &&
-      !(c.group && groups.has(c.group)) && c.d <= 2);
+      fits(c, active) && canStart(c) && c.d <= 2);
     if (!pool.length) return null;
     const c = g.pick(pool);
     g.activate(c.id, ticks || 60, 'curse');
@@ -430,140 +435,184 @@
   };
   g.press = d => request(d, true);
 
-  // ── level flow ────────────────────────────────────────────────
+  // ── run flow ──────────────────────────────────────────────────
   function layout() {
     g.cell = Math.floor(PX / Math.max(g.W, g.H));
     g.ox = Math.floor((PX - g.W * g.cell) / 2);
     g.oy = Math.floor((PX - g.H * g.cell) / 2);
   }
 
-  function placeSnake() {
-    const len = 4;
+  function placeSnake(len) {
+    len = len || 4;
     g.snake = [];
     if (g.W >= g.H) {
-      const y = Math.floor(g.H / 2), x0 = Math.max(len, Math.floor(g.W / 4));
+      len = Math.max(2, Math.min(len, g.W - 6));
+      const y = Math.floor(g.H / 2), x0 = Math.max(len - 1, Math.floor(g.W / 4));
       for (let i = 0; i < len; i++) g.snake.push({ x: x0 - i, y });
       g.dir = { x: 1, y: 0 };
     } else {
+      len = Math.max(2, Math.min(len, g.H - 6));
       const x = Math.floor(g.W / 2), y0 = Math.min(Math.floor(g.H * 0.7), g.H - len);
       for (let i = 0; i < len; i++) g.snake.push({ x, y: y0 + i });
       g.dir = { x: 0, y: -1 };
     }
   }
 
-  function startLevel() {
+  // Lay out the board for the current set of challenges (fresh board, same score).
+  function buildBoard(len) {
     for (const m of g.mods.slice()) g.deactivate(m);
     g.mods = [];
     let sz = { W: 20, H: 20 };
-    g.levelMods.forEach(id => { if (BYID[id] && BYID[id].size) sz = BYID[id].size(sz); });
+    g.levelMods.forEach(id => { if (BYID[id].size) sz = BYID[id].size(sz); });
     g.W = sz.W; g.H = sz.H;
     layout();
     g.rocks = new Map();
-    g.hazards = []; g.foods = []; g.pickups = []; g.particles = []; g.toasts = []; g.queue = [];
-    g.tick = 0; g.grow = 0; g.eaten = 0; g.lastEat = 0; g.shake = 0; g.flash = 0; g.lastTail = null;
-    placeSnake();
-    g.levelMods.forEach(id => g.activate(id, Infinity, 'level'));
-    g.goal = g.mode === 'challenge' ? Math.round(fold('goal', Math.min(4 + g.level, 12))) : Infinity;
+    g.hazards = []; g.foods = []; g.pickups = []; g.queue = [];
+    g.grow = 0; g.lastTail = null;
+    placeSnake(len);
+    g.levelMods = g.levelMods
+      .sort((a, b) => (BYID[a].canStart ? 1 : 0) - (BYID[b].canStart ? 1 : 0))
+      .filter(id => {
+        if (!canStart(BYID[id])) return false;
+        g.activate(id, Infinity, 'level');
+        return true;
+      });
     topUpFood();
-    g.nextPickup = 25 + g.rand(30);
-    if (tickerEl) tickerEl.textContent = '';
-  }
-
-  function pickChallenges(level) {
-    const want = level <= 2 ? 1 : level <= 5 ? 2 : level <= 9 ? 3 : 4;
-    const budget = [0, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6][Math.min(level, 10)] + Math.max(0, level - 10);
-    const seenEver = new Set(store.get('seen', []));
-    let fallback = null;
-    for (let attempt = 0; attempt < 80; attempt++) {
-      const fresh = CHALLENGES.filter(c => !g.runSeen.has(c.id));
-      const base = fresh.length >= want * 4 ? fresh : CHALLENGES.slice();
-      // Shuffle, nudging never-seen challenges toward the front.
-      const pool = base.map(c => ({ c, r: Math.random() - (seenEver.has(c.id) ? 0 : 0.35) }))
-        .sort((a, b) => a.r - b.r).map(o => o.c);
-      const out = [], groups = new Set();
-      let cost = 0;
-      for (const c of pool) {
-        if (out.length >= want) break;
-        if (c.group && groups.has(c.group)) continue;
-        if ((c.not || []).some(id => out.includes(id))) continue;
-        if (out.some(id => (BYID[id].not || []).includes(c.id))) continue;
-        if (c.size && out.some(id => BYID[id].size)) continue;
-        if (cost + c.d > budget) continue;
-        out.push(c.id);
-        cost += c.d;
-        if (c.group) groups.add(c.group);
-      }
-      if (out.length < want) continue;
-      fallback = fallback || out;
-      // Make sure each level actually asks something of you.
-      if (cost < Math.min(budget, level <= 2 ? 1 : budget - 1)) continue;
-      out.forEach(id => g.runSeen.add(id));
-      return out;
-    }
-    const out = fallback || [g.pick(CHALLENGES).id];
-    out.forEach(id => g.runSeen.add(id));
-    return out;
+    g.nextPickup = g.tick + 25 + g.rand(30);
   }
 
   function newRun(mode, practiceId) {
     g.mode = mode;
     g.practice = practiceId || null;
-    g.level = 1; g.score = 0; g.lives = 3;
-    g.runSeen = new Set();
+    g.score = 0; g.eaten = 0; g.tick = 0; g.lastEat = 0; g.playMs = 0; g.changes = 0;
+    g.shake = 0; g.flash = 0; g.particles = []; g.toasts = []; g.pending = null; g.newBest = false;
+    g.recent = [];
+    g.changeFrom = 0; g.nextChange = 6000;
     g.levelMods = practiceId ? [practiceId] : [];
-    startLevel();
+    buildBoard();
+    if (tickerEl) tickerEl.textContent = '';
     g.state = mode === 'classic' ? 'ready' : practiceId ? 'intro' : 'title';
     g.lockUntil = performance.now() + 150;
     modeBtns.forEach(b => b.classList.toggle('active', b.dataset.snakeMode === mode));
     fxEl.textContent = '';
   }
 
-  function levelClear() {
-    g.state = 'clear';
-    sfx('level');
-    g.score += 50 * g.level;
-    if (!g.practice && g.level + 1 > store.get('bestLevel', 0)) store.set('bestLevel', g.level + 1);
-    g.confetti(PX / 2, PX * 0.75, 70, true);
-    g.lockUntil = performance.now() + 700;
-    emit('clear');
+  // ── the rules changing ────────────────────────────────────────
+  const isSize = id => !!BYID[id].size;
+  const canStart = c => !c.canStart || c.canStart(g);
+  function fits(c, ids) {
+    const groups = new Set(ids.map(id => BYID[id].group).filter(Boolean));
+    if (c.group && groups.has(c.group)) return false;
+    if ((c.not || []).some(id => ids.includes(id))) return false;
+    if (ids.some(id => (BYID[id].not || []).includes(c.id))) return false;
+    if (c.size && ids.some(isSize)) return false;
+    return true;
   }
+  const cost = ids => ids.reduce((n, id) => n + BYID[id].d, 0);
+
+  // Decide what leaves and what arrives. More, and harder, the longer you last.
+  function planChange() {
+    const secs = g.playMs / 1000;
+    const target = Math.min(4, 1 + Math.floor(secs / 45));
+    const budget = Math.min(8, 1 + Math.floor(secs / 30));
+    const keep = g.levelMods.filter(() => g.chance(0.5));
+    if (keep.length >= target && keep.length) keep.splice(g.rand(keep.length), 1);
+    const others = g.mods.filter(m => m.src !== 'level').map(m => m.def.id);
+    const seenEver = new Set(store.get('seen', []));
+    const pool = CHALLENGES
+      .filter(c => !g.has(c.id) && !g.recent.includes(c.id) && canStart(c))
+      .filter(c => !c.size || g.chance(0.3)) // board changes are disruptive; keep them rare
+      .map(c => ({ c, r: Math.random() - (seenEver.has(c.id) ? 0 : 0.3) }))
+      .sort((a, b) => a.r - b.r).map(o => o.c);
+    const add = [];
+    const want = Math.max(1, target - keep.length);
+    for (const c of pool) {
+      if (add.length >= want) break;
+      const ids = keep.concat(add);
+      if (!fits(c, ids.concat(others))) continue;
+      if (cost(ids) + c.d > budget) continue;
+      add.push(c.id);
+    }
+    while (keep.length + add.length > 4) keep.shift();
+    return { keep, add };
+  }
+
+  function applyChange(plan) {
+    // Anything with a safety check goes last, so it sees the board the others made.
+    let add = plan.add.filter(id => !g.has(id))
+      .sort((a, b) => (BYID[a].canStart ? 1 : 0) - (BYID[b].canStart ? 1 : 0));
+    const next = plan.keep.concat(add);
+    const removed = g.levelMods.filter(id => !next.includes(id));
+    const resize = g.levelMods.some(isSize) || next.some(isSize)
+      ? String(g.levelMods.filter(isSize)) !== String(next.filter(isSize)) : false;
+    g.levelMods = next;
+    if (resize) {
+      buildBoard(g.snake.length + g.grow);
+      add = add.filter(id => g.levelMods.includes(id));
+      g.toast('the board changed!');
+    } else {
+      removed.forEach(id => g.deactivate(id));
+      add = add.filter(id => {
+        if (!canStart(BYID[id])) return false;
+        g.activate(id, Infinity, 'level');
+        return true;
+      });
+      g.levelMods = plan.keep.concat(add);
+    }
+    if (removed.length) g.toast('✕ ' + removed.map(id => BYID[id].name).join(', '), null, 1700);
+    add.forEach(id => g.toast(BYID[id].name, BYID[id].desc));
+    add.forEach(id => g.recent.push(id));
+    g.recent = g.recent.slice(-30);
+    g.changes++;
+    sfx('change');
+    g.changeFrom = g.playMs;
+    g.nextChange = g.playMs + 11000 + Math.random() * 7000;
+    emit('change');
+    return resize;
+  }
+
+  // Returns true if the board was rebuilt (the current move is skipped).
+  function maybeChange() {
+    if (g.mode !== 'challenge' || g.practice) return false;
+    if (!g.pending && g.playMs >= g.nextChange - 2200) {
+      g.pending = planChange();
+      g.toast('the rules are about to change…');
+      sfx('click');
+    }
+    if (g.pending && g.playMs >= g.nextChange) {
+      const plan = g.pending;
+      g.pending = null;
+      return applyChange(plan);
+    }
+    return false;
+  }
+
+  // Hall Pass: drop every challenge until the next change.
+  g.clearChallenges = () => {
+    const keep = g.levelMods.filter(isSize);
+    g.levelMods.filter(id => !keep.includes(id)).forEach(id => g.deactivate(id));
+    g.levelMods = keep;
+    g.pending = null;
+    g.changeFrom = g.playMs;
+    g.nextChange = g.playMs + 9000;
+    g.toast('all challenges excused');
+  };
 
   // Advance past whatever card is showing. `d` is an arrow, if one was pressed.
   function cont(d) {
     if (performance.now() < g.lockUntil) return;
     switch (g.state) {
       case 'ready':
-        g.state = 'play';
-        emit('start');
-        if (d) request(d);
-        break;
-      case 'title':
-        g.levelMods = pickChallenges(g.level);
-        startLevel();
-        g.state = 'intro';
-        g.lockUntil = performance.now() + 250;
-        sfx('click');
-        break;
       case 'intro':
+      case 'title':
         g.state = 'play';
         emit('start');
         if (d) request(d);
-        break;
-      case 'dead':
-        startLevel();
-        g.state = 'intro';
-        g.lockUntil = performance.now() + 250;
-        break;
-      case 'clear':
-        g.level++;
-        g.levelMods = g.practice ? [g.practice] : pickChallenges(g.level);
-        startLevel();
-        g.state = 'intro';
-        g.lockUntil = performance.now() + 250;
-        sfx('click');
         break;
       case 'over':
-        newRun(g.mode);
+        newRun(g.mode, g.practice);
+        if (g.mode === 'challenge') g.state = g.practice ? 'intro' : 'play';
+        if (g.state === 'play') emit('start');
         break;
       case 'paused':
         g.state = 'play';
@@ -662,6 +711,7 @@
 
   function step() {
     g.tick++;
+    if (maybeChange()) return;
     for (const m of g.mods.slice()) {
       if (g.tick >= m.until) {
         g.deactivate(m, true);
@@ -718,7 +768,6 @@
     run('after');
     if (g.state !== 'play') return;
 
-    if (g.mode === 'challenge' && g.eaten >= g.goal) { levelClear(); return; }
     topUpFood();
     maybeSpawnPickup();
     noticeCloseCalls();
@@ -1126,20 +1175,35 @@
 
   function drawToasts(st) {
     g.toasts = g.toasts.filter(t => g.t < t.until);
-    g.toasts.forEach((t, i) => {
+    let y = 10;
+    for (const t of g.toasts) {
       const age = g.t - t.born, left = t.until - g.t;
       const a = Math.min(1, age / 150, left / 300);
       ctx.save();
       ctx.globalAlpha = a;
-      ctx.font = '500 15px ' + st.font;
-      const w = ctx.measureText(t.text).width + 24;
-      const y = 14 + i * 32 - (1 - Math.min(1, age / 200)) * 8;
-      ctx.fillStyle = 'rgba(26,26,24,0.88)';
-      rrect(ctx, PX / 2 - w / 2, y, w, 26, 13); ctx.fill();
-      ctx.fillStyle = '#f5f0e8'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(t.text, PX / 2, y + 13.5);
+      ctx.font = '600 16px ' + st.font;
+      let w = ctx.measureText(t.text).width;
+      let lines = [];
+      if (t.sub) {
+        ctx.font = 'italic 14px ' + st.font;
+        lines = wrapText(t.sub, 320);
+        lines.forEach(l => { w = Math.max(w, ctx.measureText(l).width); });
+      }
+      w = Math.min(380, w + 28);
+      const h = t.sub ? 30 + lines.length * 17 : 28;
+      const dy = (1 - Math.min(1, age / 220)) * -10;
+      ctx.fillStyle = 'rgba(26,26,24,0.9)';
+      rrect(ctx, PX / 2 - w / 2, y + dy, w, h, 12); ctx.fill();
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = '600 16px ' + st.font;
+      ctx.fillStyle = '#f5f0e8';
+      ctx.fillText(t.text, PX / 2, y + dy + 15);
+      ctx.font = 'italic 14px ' + st.font;
+      ctx.fillStyle = 'rgba(245,240,232,0.75)';
+      lines.forEach((l, i) => ctx.fillText(l, PX / 2, y + dy + 33 + i * 17));
       ctx.restore();
-    });
+      y += (h + 6) * Math.min(1, left / 300);
+    }
   }
 
   // ── cards ─────────────────────────────────────────────────────
@@ -1201,38 +1265,22 @@
       return;
     }
     if (s === 'title') {
-      const best = store.get('bestLevel', 0);
+      const best = store.get('bestEndless', 0), bestT = store.get('bestTime', 0);
       card([
         { text: 'challenge mode', size: 34, weight: 500 },
-        { text: 'Every level brings new rules, each more absurd than the last. Grab power-ups, avoid suspicious mushrooms, and eat enough snacks to move on.', size: 17, color: P.muted, style: 'italic', gap: 12 },
-        { text: 'You have three lives.', size: 17, color: P.muted, style: 'italic', gap: 6 },
-        best ? { text: 'best: level ' + N(best), size: 16, color: P.accent, gap: 16 } : null,
+        { text: 'Endless, with one life. Every few seconds the rules change: new challenges show up and old ones wander off. Grab power-ups, avoid suspicious mushrooms and see how long you last.', size: 17, color: P.muted, style: 'italic', gap: 12 },
+        best ? { text: 'best: ' + N(best) + ' points  ·  longest run ' + clock(bestT), size: 16, color: P.accent, gap: 16 } : null,
         { text: PROMPT + ' to begin', size: 16, color: P.ink, gap: 20 },
       ].filter(Boolean), st);
     } else if (s === 'intro') {
-      const blocks = [{ text: g.practice ? 'practice' : 'level ' + N(g.level), size: 30, weight: 500 }];
+      const blocks = [{ text: 'practice', size: 30, weight: 500 }];
       g.levelMods.forEach((id, i) => {
         const d = BYID[id];
-        blocks.push({ text: d.name, size: 21, weight: 600, color: P.accent, gap: i ? 12 : 16 });
+        blocks.push({ text: d.name, size: 22, weight: 600, color: P.accent, gap: i ? 12 : 16 });
         blocks.push({ text: d.desc, size: 16, color: P.muted, style: 'italic', gap: 2 });
       });
-      blocks.push({ text: 'eat ' + N(g.goal) + ' snack' + (g.goal === 1 ? '' : 's'), size: 17, gap: 18 });
-      blocks.push({ text: PROMPT + ' to go', size: 15, color: P.muted, gap: 6 });
-      card(blocks, st);
-    } else if (s === 'dead') {
-      card([
-        { text: 'ouch.', size: 34, weight: 500 },
-        { text: g.deathReason, size: 18, color: P.muted, style: 'italic', gap: 8 },
-        g.practice ? null : { text: hearts(), size: 22, color: P.accent, gap: 14 },
-        { text: PROMPT + ' to try ' + (g.practice ? 'again' : 'level ' + N(g.level) + ' again'), size: 16, gap: 16 },
-      ].filter(Boolean), st);
-    } else if (s === 'clear') {
-      const blocks = [
-        { text: (g.practice ? 'cleared' : 'level ' + N(g.level) + ' cleared'), size: 32, weight: 500 },
-        { text: 'survived: ' + g.levelMods.map(id => BYID[id].name).join(', '), size: 16, color: P.muted, style: 'italic', gap: 10 },
-        { text: '+' + N(50 * g.level) + ' bonus', size: 17, color: P.accent, gap: 10 },
-        { text: PROMPT + (g.practice ? ' to go again' : ' for level ' + N(g.level + 1)), size: 16, gap: 16 },
-      ];
+      blocks.push({ text: 'this one stays put, so take your time', size: 15, color: P.muted, gap: 16 });
+      blocks.push({ text: PROMPT + ' to go', size: 16, gap: 8 });
       card(blocks, st);
     } else if (s === 'over') {
       if (g.mode === 'classic') {
@@ -1242,13 +1290,22 @@
           { text: 'score ' + N(g.score) + '  ·  best ' + N(store.get('bestScore', 0)), size: 18, gap: 14 },
           { text: PROMPT + ' to play again', size: 16, color: P.muted, gap: 14 },
         ], st);
-      } else {
+      } else if (g.practice) {
         card([
           { text: 'game over', size: 34, weight: 500 },
           { text: g.deathReason, size: 17, color: P.muted, style: 'italic', gap: 8 },
-          { text: 'you reached level ' + N(g.level) + '  ·  score ' + N(g.score), size: 18, gap: 14 },
-          { text: 'best: level ' + N(Math.max(g.level, store.get('bestLevel', 0))), size: 16, color: P.accent, gap: 6 },
-          { text: PROMPT + ' to start a new run', size: 16, color: P.muted, gap: 14 },
+          { text: 'lasted ' + clock(g.playMs) + '  ·  score ' + N(g.score), size: 18, gap: 14 },
+          { text: PROMPT + ' to try again', size: 16, color: P.muted, gap: 14 },
+        ], st);
+      } else {
+        const ch = g.changes;
+        card([
+          { text: 'game over', size: 34, weight: 500 },
+          { text: g.deathReason, size: 17, color: P.muted, style: 'italic', gap: 8 },
+          { text: 'score ' + N(g.score) + '  ·  lasted ' + clock(g.playMs), size: 19, gap: 14 },
+          { text: N(g.eaten) + ' snack' + (g.eaten === 1 ? '' : 's') + ', ' + N(ch) + ' rule change' + (ch === 1 ? '' : 's'), size: 16, color: P.muted, gap: 4 },
+          { text: g.newBest ? 'new best!' : 'best: ' + N(store.get('bestEndless', 0)), size: 17, color: P.accent, gap: 10 },
+          { text: PROMPT + ' to go again', size: 16, color: P.muted, gap: 14 },
         ], st);
       }
     } else if (s === 'paused') {
@@ -1263,7 +1320,10 @@
   function T(str) { return fold('text', String(str)); }
   function N(n) { const v = fold('num', n); return typeof v === 'number' ? v.toLocaleString() : v; }
   g.T = T;
-  function hearts() { return g.lives <= 6 ? '♥'.repeat(g.lives) + '♡'.repeat(Math.max(0, 3 - g.lives)) : '♥ ×' + g.lives; }
+  function clock(ms) {
+    const t = Math.floor(ms / 1000);
+    return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+  }
 
   // ── DOM bits ──────────────────────────────────────────────────
   let lastHud = '', lastFx = '', lastFont = '', lastFilter = '';
@@ -1275,10 +1335,10 @@
       text = 'challenge mode';
     } else {
       text = [
-        g.practice ? 'practice' : 'level ' + N(g.level),
-        N(Math.min(g.eaten, g.goal)) + '/' + N(g.goal) + ' eaten',
-        g.practice ? null : hearts(),
+        g.practice ? 'practice' : null,
         'score ' + N(g.score),
+        clock(g.playMs),
+        g.practice ? null : 'best ' + N(Math.max(g.score, store.get('bestEndless', 0))),
       ].filter(Boolean).join('  ·  ');
     }
     text = T(text);
@@ -1291,7 +1351,10 @@
       if (lastFx) { fxEl.textContent = ''; lastFx = ''; }
       return;
     }
-    const sig = g.mods.map(m => m.def.id + (isFinite(m.until) ? ':' + Math.ceil((m.until - g.tick) / 3) : '')).join('|');
+    const rotating = !g.practice;
+    const left = Math.max(0, g.nextChange - g.playMs);
+    const sig = g.mods.map(m => m.def.id + (isFinite(m.until) ? ':' + Math.ceil((m.until - g.tick) / 3) : '')).join('|') +
+      (rotating ? '#' + Math.ceil(left / 200) + (g.pending ? '!' : '') : '');
     if (sig === lastFx) return;
     lastFx = sig;
     fxEl.textContent = '';
@@ -1305,6 +1368,16 @@
         bar.style.width = Math.max(0, Math.min(100, (m.until - g.tick) / m.dur * 100)) + '%';
         chip.appendChild(bar);
       }
+      fxEl.appendChild(chip);
+    }
+    if (rotating) {
+      const chip = document.createElement('span');
+      chip.className = 'snake-chip next' + (g.pending ? ' soon' : '');
+      chip.textContent = T(g.pending ? 'changing…' : 'next change');
+      const bar = document.createElement('i');
+      const span = Math.max(1, g.nextChange - g.changeFrom);
+      bar.style.width = Math.max(0, Math.min(100, left / span * 100)) + '%';
+      chip.appendChild(bar);
       fxEl.appendChild(chip);
     }
   }
@@ -1460,7 +1533,7 @@
   }
 
   function speed() {
-    const base = g.mode === 'classic' ? 110 : 122 - Math.min(g.level - 1, 10) * 2.5;
+    const base = g.mode === 'classic' ? 110 : 122 - Math.min(g.playMs / 30000, 10) * 2.5;
     return Math.max(38, Math.min(600, fold('speed', base)));
   }
 
@@ -1472,6 +1545,7 @@
     g.dt = dt / 1000;
     resize();
     if (g.state === 'play') {
+      g.playMs += dt;
       if (first('frozen')) acc = 0;
       else {
         acc += dt;
@@ -1493,8 +1567,8 @@
   g._newRun = newRun;
   g._cont = cont;
   g._request = request;
-  g._levelClear = levelClear;
-  g._pickChallenges = pickChallenges;
+  g._planChange = planChange;
+  g._applyChange = applyChange;
   g._applyPowerup = applyPowerup;
   g.MODS = MODS;
   g.BYID = BYID;

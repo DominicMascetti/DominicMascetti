@@ -145,7 +145,8 @@
   challenge({
     id: 'accel', group: 'speed', d: 2, name: 'Accelerando',
     desc: 'You get a little faster with every move.',
-    speed: (g, s, ms) => ms * Math.max(0.45, 1 - g.tick / 450),
+    setup(g, s) { s.t0 = g.tick; },
+    speed: (g, s, ms) => ms * Math.max(0.45, 1 - (g.tick - s.t0) / 450),
   });
   challenge({
     id: 'heartbeat', group: 'speed', d: 1, name: 'Heartbeat',
@@ -219,14 +220,15 @@
   challenge({
     id: 'hangry', d: 1, name: 'Hangry',
     desc: 'Go too long without a snack and you start wasting away.',
-    tick(g) {
-      const since = g.tick - g.lastEat;
+    setup(g, s) { s.t0 = g.tick; },
+    tick(g, s) {
+      const since = g.tick - Math.max(g.lastEat, s.t0);
       if (since <= 50 || since % 10) return;
       if (g.snake.length <= 2) { g.die('you starved'); return; }
       g.shrink(1);
       g.say('hungry…', null, null, '#8a6d1f');
     },
-    style(g, s, st) { if (g.tick - g.lastEat > 40) st.snakeColor = '#6e6450'; },
+    style(g, s, st) { if (g.tick - Math.max(g.lastEat, s.t0) > 40) st.snakeColor = '#6e6450'; },
   });
   challenge({
     id: 'taxes', d: 1, name: 'Tax Season',
@@ -241,8 +243,8 @@
     },
   });
   challenge({
-    id: 'longboi', d: 1, temp: false, name: 'Long Boi',
-    desc: 'You start this level at an impressive length.',
+    id: 'longboi', d: 1, name: 'Long Boi',
+    desc: 'You suddenly become sixteen squares longer.',
     setup(g) { g.grow += 16; },
   });
 
@@ -420,6 +422,11 @@
   challenge({
     id: 'hotedges', group: 'walls', d: 1, name: 'Hot Edges',
     desc: 'The outermost ring of the board is lava.',
+    canStart(g) {
+      const inner = p => p.x >= 1 && p.y >= 1 && p.x <= g.W - 2 && p.y <= g.H - 2;
+      const h = g.head(), ahead = { x: h.x + g.dir.x * 3, y: h.y + g.dir.y * 3 };
+      return g.snake.every(inner) && inner(ahead);
+    },
     setup(g) {
       for (let y = 0; y < g.H; y++) {
         for (let x = 0; x < g.W; x++) {
@@ -503,13 +510,14 @@
       }
     },
   });
-  const tideLevel = g => Math.round((Math.sin(g.tick / 40 - 1.5) + 1) / 2 * g.H * 0.4);
+  const tideLevel = (g, s) => Math.round((Math.sin((g.tick - s.t0) / 40 - Math.PI / 2) + 1) / 2 * g.H * 0.4);
   challenge({
     id: 'tide', d: 0, name: 'Rising Tide',
     desc: 'The water rises and falls. Swimming is slow.',
-    speed(g, s, ms) { const h = g.head(); return h && h.y >= g.H - tideLevel(g) ? ms * 1.6 : ms; },
+    setup(g, s) { s.t0 = g.tick; },
+    speed(g, s, ms) { const h = g.head(); return h && h.y >= g.H - tideLevel(g, s) ? ms * 1.6 : ms; },
     draw(g, s, c) {
-      const lv = tideLevel(g);
+      const lv = tideLevel(g, s);
       if (!lv) return;
       const top = g.oy + (g.H - lv) * g.cell, w = g.W * g.cell;
       c.save();
@@ -575,12 +583,12 @@
   });
   challenge({
     id: 'buffet', d: 0, not: ['alphabet', 'picky'], name: 'All-You-Can-Eat',
-    desc: 'Five snacks out at once, but you need to eat twice as many.',
+    desc: 'Five snacks out at once. Help yourself.',
     foodCount: (g, s, n) => Math.max(n, 5),
-    goal: (g, s, n) => n * 2,
   });
   challenge({
     id: 'perishables', d: 1, not: ['picky', 'alphabet'], name: 'Perishables',
+    cleanup(g) { g.foods.forEach(f => { delete f.scale; if (!f.bad && !f.gold && f.pk == null) delete f.color; }); },
     desc: 'Food rots if you leave it out, and rotten food turns to stone.',
     tick(g) {
       for (const f of g.foods.slice()) {
@@ -596,33 +604,36 @@
   });
   challenge({
     id: 'mystery', d: 1, not: ['picky', 'alphabet'], name: 'Mystery Meat',
-    desc: 'Some snacks are poisoned. Poison shrinks you and sets you back.',
+    cleanup(g) { g.foods.forEach(f => { if (f.bad) { delete f.bad; delete f.color; } }); },
+    desc: 'Some snacks are poisoned. Poison shrinks you and costs you points.',
     foodCount: (g, s, n) => Math.max(n, 3),
     newFood(g, s, f) {
       if (g.foods.some(o => !o.bad) && g.chance(0.5)) { f.bad = true; f.color = '#6c3fb5'; }
     },
     eat(g, s, f, res) {
       if (!f.bad) return;
-      res.grow = 0; res.progress = -1; res.points = -10; res.sound = 'bad';
+      res.grow = 0; res.progress = 0; res.points = -20; res.sound = 'bad';
       g.shrink(3);
       g.say('ew', f.x, f.y, '#6c3fb5');
     },
   });
   challenge({
     id: 'goldrush', d: 0, name: 'Gold Rush',
-    desc: 'Some snacks are solid gold and count triple.',
+    cleanup(g) { g.foods.forEach(f => { if (f.gold) { delete f.gold; delete f.color; } }); },
+    desc: 'Some snacks are solid gold and worth five times as much.',
     newFood(g, s, f) { if (!f.bad && !f.label && f.pk == null && g.chance(0.3)) { f.gold = true; f.color = '#c99a06'; } },
     eat(g, s, f, res) {
       if (!f.gold) return;
-      res.progress *= 3; res.points *= 5;
-      g.say('×3', f.x, f.y, '#c99a06');
+      res.points *= 5;
+      g.say('×5', f.x, f.y, '#c99a06');
     },
   });
   const ABC = ['A', 'B', 'C'];
   challenge({
     id: 'alphabet', d: 1, not: ['mystery', 'picky', 'goldrush', 'perishables', 'buffet'], name: 'Alphabet Soup',
     desc: 'Eat the letters in alphabetical order.',
-    setup(g, s) { s.next = 0; },
+    setup(g, s) { s.next = 0; g.foods.splice(0); },
+    cleanup(g) { g.foods.forEach(f => { if (f.label) { delete f.label; delete f.color; } }); },
     foodCount: (g, s) => 3 - s.next,
     newFood(g, s, f) {
       const present = g.foods.map(o => o.label);
@@ -637,7 +648,7 @@
         if (s.next === 3) { s.next = 0; g.say('A B C!', f.x, f.y, '#3d7a3a'); }
         return;
       }
-      res.grow = 0; res.progress = 0; res.sound = 'bad';
+      res.grow = 0; res.points = 0; res.sound = 'bad';
       g.shrink(2);
       g.say('that’s ' + f.label + ', not ' + ABC[s.next], f.x, f.y, '#5c0000');
     },
@@ -646,7 +657,8 @@
   challenge({
     id: 'picky', d: 1, not: ['mystery', 'alphabet', 'perishables', 'goldrush', 'buffet'], name: 'Picky Eater',
     desc: 'You can only eat snacks that match your color.',
-    setup(g, s) { s.c = g.rand(3); },
+    setup(g, s) { s.c = g.rand(3); g.foods.forEach(f => this.newFood(g, s, f)); },
+    cleanup(g) { g.foods.forEach(f => { delete f.pk; delete f.color; }); },
     foodCount: () => 3,
     newFood(g, s, f) {
       const have = g.foods.map(o => o.pk);
@@ -656,7 +668,7 @@
     },
     eat(g, s, f, res) {
       if (f.pk !== s.c) {
-        res.grow = 0; res.progress = 0; res.sound = 'bad';
+        res.grow = 0; res.points = 0; res.sound = 'bad';
         g.shrink(2);
         g.say('you’re ' + PICKY[s.c].n + '!', f.x, f.y, PICKY[s.c].c);
       }
@@ -680,15 +692,22 @@
     desc: 'Food is delivered right near your face.',
     place(g, s, x, y) { const d = g.dist(g.head(), { x, y }); return d >= 3 && d <= 5; },
   });
+  function holeAt(g) {
+    const h = g.head(), horiz = g.dir.y === 0;
+    let cx = Math.floor(g.W / 2) - 1, cy = Math.floor(g.H / 2) - 1;
+    if (horiz && (h.y === cy || h.y === cy + 1)) cy = h.y - 3 >= 0 ? h.y - 3 : h.y + 2;
+    if (!horiz && (h.x === cx || h.x === cx + 1)) cx = h.x - 3 >= 0 ? h.x - 3 : h.x + 2;
+    return { cx, cy, cells: [{ x: cx, y: cy }, { x: cx + 1, y: cy }, { x: cx, y: cy + 1 }, { x: cx + 1, y: cy + 1 }] };
+  }
   challenge({
     id: 'blackhole', d: 1, name: 'Black Hole',
     desc: 'A black hole drags food toward it. Don’t get too close.',
+    canStart(g) {
+      const { cells } = holeAt(g);
+      return cells.every(c => g.onSnake(c.x, c.y) < 0 && !g.rockAt(c.x, c.y) && g.dist(c, g.head()) >= 3);
+    },
     setup(g, s) {
-      const h = g.head(), horiz = g.dir.y === 0;
-      let cx = Math.floor(g.W / 2) - 1, cy = Math.floor(g.H / 2) - 1;
-      if (horiz && (h.y === cy || h.y === cy + 1)) cy = h.y - 3 >= 0 ? h.y - 3 : h.y + 2;
-      if (!horiz && (h.x === cx || h.x === cx + 1)) cx = h.x - 3 >= 0 ? h.x - 3 : h.x + 2;
-      const cells = [{ x: cx, y: cy }, { x: cx + 1, y: cy }, { x: cx, y: cy + 1 }, { x: cx + 1, y: cy + 1 }];
+      const { cx, cy, cells } = holeAt(g);
       cells.forEach(c => { const f = g.foodAt(c.x, c.y); if (f >= 0) g.foods.splice(f, 1); });
       s.c = { x: cx + 0.5, y: cy + 0.5 };
       s.cells = cells;
@@ -748,7 +767,7 @@
   challenge({
     id: 'hotpotato', d: 2, name: 'Hot Potato',
     desc: 'You’re holding a hot potato. Eat before the timer runs out or it explodes.',
-    setup(g, s) { s.deadline = 85; },
+    setup(g, s) { s.deadline = g.tick + 85; },
     eat(g, s) { s.deadline = g.tick + 85; },
     tick(g, s) {
       const left = s.deadline - g.tick;
@@ -1356,6 +1375,12 @@
   challenge({
     id: 'twin', group: 'opponent', d: 2, name: 'Evil Twin',
     desc: 'A mirror-image twin copies your every move. Either of you can eat. Don’t touch.',
+    canStart(g) {
+      const mid = (g.W - 1) / 2, side = Math.sign(g.head().x - mid);
+      const h = g.head(), clear = i => !g.rockAt(g.W - 1 - (h.x + g.dir.x * i), h.y + g.dir.y * i);
+      return side !== 0 && Math.abs(h.x - mid) >= 2.5 && g.snake.every(p => Math.sign(p.x - mid) === side) &&
+        !g.snake.some(p => g.rockAt(g.W - 1 - p.x, p.y)) && clear(1) && clear(2) && clear(3);
+    },
     setup(g) {
       g.hazards.push({
         owner: 'twin',
@@ -1529,6 +1554,7 @@
     close: ['OH! Inches from disaster!', 'My heart can’t take this.', 'Did you SEE that turn?', 'That was closer than my mortgage payment.'],
     pickup: ['A power-up! The crowd goes wild!', 'Ooh, what’s in the box?', 'That changes everything. Maybe.'],
     long: ['Look at the LENGTH on that snake!', 'They’re going to need a bigger board.'],
+    change: ['The rules have changed! Can the snake adapt?', 'A shocking change from the referees!', 'Nobody saw that coming, folks.'],
     idle: ['Looking for an opening here…', 'Patient snake. Very patient.', 'Fun fact: snakes cannot clap.', 'Still anyone’s game.', 'The food is looking nervous.'],
     die: ['OH NO. OH NO NO NO.', 'And it’s all over!', 'That’s going to leave a mark.', 'A tragic end to a beautiful run.'],
   });
@@ -1538,6 +1564,7 @@
     close: ['The snake narrowly avoids catastrophe. We dare not intervene.', 'Even the most experienced snake is not immune to error.'],
     pickup: ['A rare find. Few snakes ever witness such a thing.'],
     long: ['The snake has grown impressively long. A true elder of the grid.'],
+    change: ['The seasons turn. The snake must adapt, or perish.', 'A sudden change in the habitat.'],
     idle: ['We must remain very quiet now.', 'The snake surveys its territory.', 'Notice how the tail follows the head. Every time.', 'Snakes have no eyelids. This one has seen things.'],
     die: ['And so the circle of life continues.', 'We must not interfere. That is the rule.', 'A sobering moment for the crew.'],
   });
@@ -1547,6 +1574,7 @@
     close: ['Almost failing is just succeeding with extra steps.', 'Pivot. Pivot. PIVOT.'],
     pickup: ['Thrilled to add a new skill to my profile. Endorse me!'],
     long: ['Humbled to announce I am now very long.'],
+    change: ['Big changes at the company. Excited for this next chapter!', 'Restructuring is just growth in disguise.'],
     idle: ['Rise and grind. Slither and grind.', 'Your network is your net worth. My network is 400 squares.', 'Unpopular opinion: walls are bad.', 'I’m not just a snake. I’m a thought leader.'],
     die: ['Failure is just a growth opportunity. I am no longer growing.', 'Personal news: I have been let go (I hit something).'],
   });
@@ -1796,9 +1824,9 @@
     use(g) { g.cut(Math.ceil(g.snake.length / 2)); },
   });
   powerup({
-    id: 'double', icon: '⭐', weight: 5, dur: 80, name: 'Double Snacks',
-    desc: 'Every snack counts twice toward the goal.',
-    eat(g, s, f, res) { if (res.progress > 0) res.progress *= 2; },
+    id: 'double', icon: '⭐', weight: 5, dur: 80, name: 'Double Points',
+    desc: 'Every snack is worth twice as much.',
+    eat(g, s, f, res) { if (res.points > 0) res.points *= 2; },
   });
   powerup({
     id: 'pinata', icon: '🪅', weight: 4, name: 'Piñata',
@@ -1831,9 +1859,13 @@
       g.say('BOOM', null, null, '#e8590c', true);
     },
   });
-  powerup({ id: 'star', icon: '🌟', weight: 6, name: 'Shooting Star', desc: 'Counts as three snacks.', use(g) { g.eaten += 3; g.score += 30; } });
-  powerup({ id: 'hallpass', icon: '🎟️', weight: 1, name: 'Hall Pass', desc: 'Skip the rest of this level.', use(g) { g.eaten = Math.max(g.eaten, g.goal); } });
-  powerup({ id: 'oneup', icon: '❤️', weight: 2, name: 'Extra Life', desc: 'One more life.', when: g => !g.practice, use(g) { g.lives++; } });
+  powerup({ id: 'star', icon: '🌟', weight: 6, name: 'Shooting Star', desc: 'Worth fifty points.', use(g) { g.score += 50; } });
+  powerup({
+    id: 'hallpass', icon: '🎟️', weight: 2, name: 'Hall Pass',
+    desc: 'Excuses you from every current challenge, until the next change.',
+    when: g => !g.practice && g.levelMods.some(id => !g.BYID[id].size),
+    use(g) { g.clearChallenges(); },
+  });
   powerup({ id: 'mysterybox', icon: '🎁', weight: 5, name: 'Mystery Box', desc: 'Could be anything. Anything!', use(g) { g.surprise(); } });
   powerup({
     id: 'mushroom', icon: '🍄', weight: 4, curse: true, name: 'Suspicious Mushroom',
@@ -1842,9 +1874,9 @@
   });
   powerup({
     id: 'discofever', icon: '🪩', weight: 3, dur: 60, name: 'Disco Fever',
-    desc: 'Rainbow mode, and snacks count double.',
+    desc: 'Rainbow mode, and snacks are worth double.',
     style(g, s, st) { st.rainbow = true; },
-    eat(g, s, f, res) { if (res.progress > 0) res.progress *= 2; },
+    eat(g, s, f, res) { if (res.points > 0) res.points *= 2; },
   });
   powerup({
     id: 'autopilot', icon: '🤖', weight: 4, dur: 45, name: 'Autopilot',
@@ -1914,9 +1946,9 @@
   });
   powerup({
     id: 'coffee', icon: '☕', weight: 4, dur: 50, name: 'Coffee',
-    desc: 'Faster, sharper, and every snack counts double.',
+    desc: 'Faster, sharper, and every snack is worth double.',
     speed: (g, s, ms) => ms * 0.72,
-    eat(g, s, f, res) { if (res.progress > 0) res.progress *= 2; },
+    eat(g, s, f, res) { if (res.points > 0) res.points *= 2; },
   });
   powerup({
     id: 'timebomb', icon: '💣', weight: 2, dur: 30, curse: true, name: 'Time Bomb',
