@@ -11,20 +11,17 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Read one row from the comments table
+      - name: Call the keep_alive database function
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
         run: |
-          # Quick sanity checks (prints lengths/prefix only, never the full key)
-          echo "URL length: ${#SUPABASE_URL}"
-          echo "Key length: ${#SUPABASE_PUBLISHABLE_KEY}"
-          echo "Key starts with: ${SUPABASE_PUBLISHABLE_KEY:0:15}"
-
           status=$(curl --silent --show-error \
             -o response.txt -w "%{http_code}" \
-            "$SUPABASE_URL/rest/v1/comments?select=*&limit=1" \
-            -H "apikey: $SUPABASE_PUBLISHABLE_KEY")
+            -X POST "$SUPABASE_URL/rest/v1/rpc/keep_alive" \
+            -H "apikey: $SUPABASE_PUBLISHABLE_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{}')
 
           echo "HTTP status: $status"
           echo "Response:"
