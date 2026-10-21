@@ -14,9 +14,23 @@ jobs:
       - name: Read one row from the comments table
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
         run: |
-          curl --fail --silent --show-error \
+          # Quick sanity checks (prints lengths/prefix only, never the full key)
+          echo "URL length: ${#SUPABASE_URL}"
+          echo "Key length: ${#SUPABASE_PUBLISHABLE_KEY}"
+          echo "Key starts with: ${SUPABASE_PUBLISHABLE_KEY:0:15}"
+
+          status=$(curl --silent --show-error \
+            -o response.txt -w "%{http_code}" \
             "$SUPABASE_URL/rest/v1/comments?select=*&limit=1" \
-            -H "apikey: $SUPABASE_ANON_KEY" \
-            -H "Authorization: Bearer $SUPABASE_ANON_KEY"
+            -H "apikey: $SUPABASE_PUBLISHABLE_KEY")
+
+          echo "HTTP status: $status"
+          echo "Response:"
+          cat response.txt
+          echo
+
+          if [ "$status" -ge 400 ]; then
+            exit 1
+          fi
