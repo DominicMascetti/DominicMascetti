@@ -162,11 +162,14 @@ function htmlToText(html: string): string {
 }
 
 // Fetches the published post so Jev can judge the comment in context. The post
-// path is already constrained by the table's check to /posts/<name>.html.
+// path is already constrained by the table's check to /posts/<name>.html, the
+// key comments kept after posts moved to /blog/<name>; the old path is now just
+// a redirect page, so fetch the post where it lives.
 async function fetchPost(path: string): Promise<Post | null> {
-  if (!/^\/posts\/[A-Za-z0-9._-]+\.html$/.test(path)) return null;
+  const name = path.match(/^\/posts\/([A-Za-z0-9._-]+)\.html$/)?.[1];
+  if (!name) return null;
   try {
-    const res = await fetch(SITE_URL + path, { signal: AbortSignal.timeout(5000) });
+    const res = await fetch(`${SITE_URL}/blog/${name}`, { signal: AbortSignal.timeout(5000) });
     if (!res.ok) throw new Error(`status ${res.status}`);
     const html = await res.text();
     const header = html.match(/<div class="post-header">([\s\S]*?)<hr>/)?.[1] ?? "";

@@ -6,6 +6,7 @@ description: Or "why my summer sucked"
 status: finished
 tag: personal
 slug: workshops-mental-blocks
+redirect_from: /posts/workshops-mental-blocks
 ---
 *Context for this post: the Global Challenges Project (GCP) is a workshop for people exploring AI safety (and biosecurity) careers. I'm not talking about Google Cloud Platform.*
 

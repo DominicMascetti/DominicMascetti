@@ -4,8 +4,9 @@ description: What does a productive teacher even look like?
 tag: ai
 status: finished
 slug: the-automated-teacher
+redirect_from: /posts/the-automated-teacher
 ---
-<p><a href="https://dominicmascetti.com/posts/you-should-have-an-honest-discussion-about-your-future">In my last post</a> I included teachers as a career that could be automated. I still believe it can, but I think there's less pressure on it to be automated than I initially assumed.</p>
+<p><a href="https://dominicmascetti.com/blog/you-should-have-an-honest-discussion-about-your-future">In my last post</a> I included teachers as a career that could be automated. I still believe it can, but I think there's less pressure on it to be automated than I initially assumed.</p>
 
 <p>The value of many jobs (to an employer) can be simplified as Productivity / Time</p>
 

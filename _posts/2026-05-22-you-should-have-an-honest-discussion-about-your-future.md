@@ -4,6 +4,7 @@ description: AGI is AGI
 tag: ai
 status: finished
 slug: you-should-have-an-honest-discussion-about-your-future
+redirect_from: /posts/you-should-have-an-honest-discussion-about-your-future
 ---
 <p>It isn't easy imagining a post-AGI world. None of us are ready for it. Hundreds of thousands of workers will rapidly be replaced by intelligences that work faster, harder, and don't make mistakes.</p>
 

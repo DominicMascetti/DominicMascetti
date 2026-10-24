@@ -8,13 +8,13 @@
   <meta name="theme-color" content="#5c0000" />
 {% if page.layout == "post" %}
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="{{ page.title }}" />
-  <meta property="og:description" content="{{ page.description }}" />
+  <meta property="og:title" content="{{ page.title | escape }}" />
+  <meta property="og:description" content="{{ page.description | escape }}" />
   <meta property="og:url" content="{{ page.url | absolute_url }}" />
   <meta property="og:site_name" content="Dominic Mascetti" />
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="{{ page.title }}" />
-  <meta name="twitter:description" content="{{ page.description }}" />
+  <meta name="twitter:title" content="{{ page.title | escape }}" />
+  <meta name="twitter:description" content="{{ page.description | escape }}" />
 {% endif %}
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{{ '/assets/css/site.css' | relative_url }}" />

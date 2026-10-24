@@ -1,5 +1,5 @@
-{%- comment -%} Comments are keyed by the original .html path, so they survived the switch to clean URLs. {%- endcomment -%}
-<section id="comments" class="comments" data-post="{{ page.url }}.html">
+{%- comment -%} Comments are keyed by the original /posts/<slug>.html path, so they survived the moves to clean URLs and /blog/. {%- endcomment -%}
+<section id="comments" class="comments" data-post="{{ page.url | replace_first: '/blog/', '/posts/' }}.html">
   <h2 class="comments-heading">comments</h2>
   <form class="comment-form" novalidate>
     <textarea name="body" required maxlength="3000" rows="1" placeholder="say something…" aria-label="Comment"></textarea>

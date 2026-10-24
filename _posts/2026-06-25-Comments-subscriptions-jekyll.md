@@ -4,6 +4,7 @@ description: Billions must read
 status: finished
 tag: meta
 slug: comments-subscriptions-jekyll
+redirect_from: /posts/comments-subscriptions-jekyll
 ---
 [Ivan](https://www.ivanshishkin.com/) suggested adding comments and a way to subscribe. So now you can comment and subscribe. Have fun!!!
 

@@ -1,10 +1,15 @@
 title: Dominic Mascetti
 url: "https://dominicmascetti.com"
 
-# Clean URLs (posts/disappointment-day). Jekyll still writes the file as
-# posts/disappointment-day.html, and GitHub Pages serves it both with and
-# without the extension, so already-shared .html links keep working.
-permalink: /posts/:slug
+# Clean URLs (blog/disappointment-day). Jekyll still writes the file as
+# blog/disappointment-day.html, and GitHub Pages serves it both with and
+# without the extension.
+permalink: /blog/:slug
+
+# Posts used to live at /posts/<slug>(.html). Each older post lists its old
+# path under redirect_from so shared links still land on it.
+plugins:
+  - jekyll-redirect-from
 
 markdown: kramdown
 
