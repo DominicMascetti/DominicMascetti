@@ -1,4 +1,5 @@
-<section id="comments" class="comments" data-post="{{ page.url }}">
+{%- comment -%} Comments are keyed by the original .html path, so they survived the switch to clean URLs. {%- endcomment -%}
+<section id="comments" class="comments" data-post="{{ page.url }}.html">
   <h2 class="comments-heading">comments</h2>
   <form class="comment-form" novalidate>
     <textarea name="body" required maxlength="3000" rows="1" placeholder="say something…" aria-label="Comment"></textarea>

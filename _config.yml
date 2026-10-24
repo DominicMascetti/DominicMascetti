@@ -1,9 +1,10 @@
 title: Dominic Mascetti
 url: "https://dominicmascetti.com"
 
-# Reproduces the exact existing URL pattern (posts/disappointment-day.html, etc.)
-# so any already-shared links keep working.
-permalink: /posts/:slug.html
+# Clean URLs (posts/disappointment-day). Jekyll still writes the file as
+# posts/disappointment-day.html, and GitHub Pages serves it both with and
+# without the extension, so already-shared .html links keep working.
+permalink: /posts/:slug
 
 markdown: kramdown
 

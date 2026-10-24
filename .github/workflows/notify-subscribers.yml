@@ -42,7 +42,7 @@ jobs:
             DESC=$(sed -n 's/^description:[[:space:]]*//p' "$file" | head -1 | sed 's/^"//; s/"$//')
             SLUG=$(sed -n 's/^slug:[[:space:]]*//p' "$file" | head -1)
 
-            URL="$SITE_URL/posts/$SLUG.html"
+            URL="$SITE_URL/posts/$SLUG"
 
             echo "Notifying subscribers about: $TITLE ($URL)"
 
