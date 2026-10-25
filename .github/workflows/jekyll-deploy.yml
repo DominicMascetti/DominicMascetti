@@ -1,8 +1,10 @@
 name: Build and deploy Jekyll site
 
+# main builds and deploys. pele-diagrams builds (with drafts) and uploads _site
+# as a downloadable artifact, but never deploys.
 on:
   push:
-    branches: [main]
+    branches: [main, pele-diagrams]
 
 permissions:
   contents: read
@@ -10,31 +12,62 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
+  group: pages-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      JEKYLL_ENV: production
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # pele is pinned to an exact version in package.json.
+      - name: Install Pele
+        run: npm install --no-audit --no-fund
+
+      - name: Verify Pele renders in plain Node
+        run: node _scripts/pele-verify.mjs
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+
       - name: Setup Pages
+        if: github.ref == 'refs/heads/main'
         uses: actions/configure-pages@v5
 
       - name: Build with Jekyll
-        uses: actions/jekyll-build-pages@v1
+        run: bundle exec jekyll build ${{ github.ref != 'refs/heads/main' && '--drafts' || '' }}
+
+      - name: Check rendered diagrams
+        if: github.ref != 'refs/heads/main'
+        run: ruby _scripts/check-diagrams.rb _site/blog/pele-diagram-test.html
+
+      - name: Upload built site for inspection
+        if: github.ref != 'refs/heads/main'
+        uses: actions/upload-artifact@v4
         with:
-          source: ./
-          destination: ./_site
+          name: site
+          path: ./_site
 
       - name: Upload artifact
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./_site
 
   deploy:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: build
     environment:

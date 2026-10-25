@@ -27,8 +27,15 @@ defaults:
 supabase_url: https://lkhasrwsvrxahvynpawv.supabase.co
 supabase_key: sb_publishable_7WQtyNK8NLIPXqiFrEyBjQ_o_oJvid8
 
-# Supabase backend (migrations, edge function) stays out of the published site.
+# Supabase backend (migrations, edge function) and build tooling stay out of
+# the published site.
 exclude:
   - supabase
+  - Gemfile
+  - Gemfile.lock
+  - package.json
+  - package-lock.json
+  - node_modules
+  - vendor
   - "*.sql"
   - "**/*.sql"

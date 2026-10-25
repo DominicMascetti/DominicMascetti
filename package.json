@@ -1,0 +1,11 @@
+{
+  "name": "dominicmascetti-site",
+  "private": true,
+  "description": "Build-time tooling only: renders Mermaid diagrams to inline SVG during jekyll build.",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "pele": "1.10.0"
+  }
+}

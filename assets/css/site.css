@@ -212,6 +212,44 @@ hr {
   display: block;
 }
 
+/* ── DIAGRAMS ────────────────────────────────────────────── */
+/* Mermaid blocks rendered to inline SVG at build time (_plugins/pele_diagrams.rb). */
+
+.post-content .diagram,
+.post-content .diagram .pele {
+  --pele-bg:             var(--bg);
+  --pele-fg:             var(--ink);
+  --pele-muted:          var(--muted);
+  --pele-line:           var(--muted);
+  --pele-surface:        var(--bg);
+  --pele-surface-alt:    #ece6db;
+  --pele-border:         var(--faint);
+  --pele-accent:         var(--accent);
+  --pele-critical:       var(--accent);
+  --pele-error:          var(--accent);
+  --pele-font:           'EB Garamond', Georgia, serif;
+  --pele-font-mono:      'JetBrains Mono', monospace;
+  --pele-title-weight:   500;
+  --pele-heading-weight: 500;
+  --pele-bold-weight:    600;
+  --pele-radius:         3px;
+  --pele-series-1:       #5c0000;
+  --pele-series-2:       #8a8a84;
+  --pele-series-3:       #a8806a;
+  --pele-series-4:       #5a5a56;
+  --pele-series-5:       #c9bfae;
+  --pele-series-6:       #8c3a2e;
+  --pele-series-7:       #3a3a36;
+  --pele-series-8:       #ddd8cc;
+}
+.post-content .diagram { margin: 1.5rem 0; }
+.post-content .diagram svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
 /* ── SUBSCRIBE ───────────────────────────────────────────── */
 
 .subscribe { margin-bottom: 0.6rem; }
